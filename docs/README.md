@@ -7,8 +7,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ```bash
-# Sin API key, sin conexión, en 5 segundos
-go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest && kfs run --mock
+# Opción 1 — Un solo comando (auto-instala + configura PATH)
+curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/install.sh | bash
+
+# Opción 2 — Solo Go (si ya lo tienes)
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
+
+# Opción 3 — Docker
+docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run --mock
 ```
 
 ---
