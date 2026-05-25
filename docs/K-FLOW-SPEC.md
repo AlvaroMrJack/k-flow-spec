@@ -6,7 +6,7 @@
 ```bash
 # Instalación (elegí una)
 brew install k-flow-spec
-go install github.com/AlvaroMrJack/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 npx k-flow-spec
 
 # Usarlo
@@ -283,7 +283,7 @@ notifications:
 ```bash
 # Opción 1: Homebrew (recomendado)
 # Opción 2: Go
-go install github.com/AlvaroMrJack/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 
 # Opción 3: npm (wrapper)
 npx k-flow-spec init
@@ -1061,7 +1061,7 @@ De 0 a QA automatizado de workflows WhatsApp en **5 días**, con:
 
 ```bash
 # Día 1: Instalar + configurar
-go install github.com/AlvaroMrJack/k-flow-spec@latest && kfs init
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest && kfs init
 
 # Día 1: Generar specs automáticamente
 kfs generate

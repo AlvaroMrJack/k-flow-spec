@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -19,5 +19,5 @@ var mockCmd = &cobra.Command{
 
 func init() {
 	mockCmd.Flags().IntVarP(&port, "port", "p", 8080, "Puerto para el servidor mock")
-	rootCmd.AddCommand(mockCmd)
+	RootCmd.AddCommand(mockCmd)
 }

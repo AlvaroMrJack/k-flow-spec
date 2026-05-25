@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -111,5 +111,5 @@ func init() {
 	runBroadcastCmd.Flags().BoolVar(&broadcastMock, "mock", false, "Contra mock server")
 	runBroadcastCmd.Flags().BoolVar(&broadcastDryRun, "dry-run", false, "Solo validar recipients sin enviar")
 	runBroadcastCmd.Flags().StringVarP(&broadcastSpecFile, "spec", "s", "", "Archivo spec de broadcast")
-	rootCmd.AddCommand(runBroadcastCmd)
+	RootCmd.AddCommand(runBroadcastCmd)
 }

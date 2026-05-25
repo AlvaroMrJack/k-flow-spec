@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -131,5 +131,5 @@ func init() {
 	webhookCmd.Flags().BoolVar(&webhookRun, "run", false, "Ejecutar workflow spec después de iniciar webhook")
 	webhookCmd.Flags().BoolVar(&webhookVerbose, "verbose", false, "Ver eventos en tiempo real por consola")
 	webhookCmd.Flags().BoolVarP(&webhookTunnel, "tunnel", "t", false, "Auto-túnel con ngrok")
-	rootCmd.AddCommand(webhookCmd)
+	RootCmd.AddCommand(webhookCmd)
 }

@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -89,5 +89,5 @@ func init() {
 	deployCmd.Flags().BoolVar(&deployDryRun, "dry-run", false, "Build + test sin push")
 	deployCmd.Flags().BoolVar(&deployFull, "full", false, "Deploy completo + broadcast + webhook")
 	deployCmd.Flags().StringVarP(&deployEnv, "env", "e", "production", "Entorno de deploy")
-	rootCmd.AddCommand(deployCmd)
+	RootCmd.AddCommand(deployCmd)
 }

@@ -8,7 +8,7 @@
 
 ```bash
 # Sin API key, sin conexión, en 5 segundos
-go install github.com/AlvaroMrJack/k-flow-spec@latest && kfs run --mock
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest && kfs run --mock
 ```
 
 ---
@@ -27,7 +27,7 @@ Hoy, testear un workflow de WhatsApp es agarrar el celular, escribir mensajes a 
 
 ```bash
 # 1. Instalar
-go install github.com/AlvaroMrJack/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 
 # 2. Probar al toque (sin API key, sin conexión)
 cd tu-proyecto/
@@ -56,7 +56,7 @@ Results: 2 passed, 1 failed, 0 skipped (20.7s)
 
 ```bash
 # Go
-go install github.com/AlvaroMrJack/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 
 # Docker
 docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run
@@ -175,7 +175,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
-      - run: go install github.com/AlvaroMrJack/k-flow-spec@latest
+      - run: go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
       - run: kfs test --ci
         env:
           KAPSO_API_KEY: ${{ secrets.KAPSO_API_KEY }}

@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -30,5 +30,5 @@ func runKfsCommand(subcmd string, args ...string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(testCmd)
+	RootCmd.AddCommand(testCmd)
 }

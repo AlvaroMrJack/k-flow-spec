@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -51,5 +51,5 @@ func init() {
 	uiCmd.Flags().IntVarP(&uiPort, "port", "p", 4173, "Puerto para el dashboard")
 	uiCmd.Flags().BoolVar(&uiMock, "mock", false, "Dashboard + mock server integrado")
 	uiCmd.Flags().StringVar(&uiExport, "export", "", "Exportar HTML estático a un directorio")
-	rootCmd.AddCommand(uiCmd)
+	RootCmd.AddCommand(uiCmd)
 }

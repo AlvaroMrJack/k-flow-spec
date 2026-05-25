@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -37,5 +37,5 @@ defaults:
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(initCmd)
 }

@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -95,5 +95,5 @@ var generateCmd = &cobra.Command{
 func init() {
 	generateCmd.Flags().StringVar(&workflowID, "workflow", "", "ID del flujo específico a generar")
 	generateCmd.Flags().BoolVar(&saveFixtures, "save-fixtures", false, "Además de specs, guarda fixtures para modo mock")
-	rootCmd.AddCommand(generateCmd)
+	RootCmd.AddCommand(generateCmd)
 }

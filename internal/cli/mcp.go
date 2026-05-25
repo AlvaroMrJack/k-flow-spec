@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"context"
@@ -56,5 +56,5 @@ Uso en opencode.json o claude_desktop_config.json:
 }
 
 func init() {
-	rootCmd.AddCommand(mcpCmd)
+	RootCmd.AddCommand(mcpCmd)
 }
