@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,10 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Inicializa un proyecto k-flow-spec en el directorio actual",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		content := `project: "my-kapso-project"
+		cwd, _ := os.Getwd()
+		projName := filepath.Base(cwd)
+
+		content := fmt.Sprintf(`project: "%s"
 base_url: "https://api.kapso.ai/platform/v1"
 api_key: "${KAPSO_API_KEY}"
 phone_number: "+56912345678"
@@ -30,7 +34,7 @@ defaults:
   snapshot: true
   poll_interval_ms: 500
   poll_max_retries: 60
-`
+`, projName)
 		if err := os.WriteFile("kfs.yaml", []byte(content), 0644); err != nil {
 			return err
 		}

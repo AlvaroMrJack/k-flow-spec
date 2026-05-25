@@ -40,16 +40,25 @@ Usa --full para deploy completo con broadcast test y webhook validation.`,
 			return err
 		}
 
-		workflows := cfg.Deploy.Workflows
+		// Use config environment as default, fallback to flag or "production"
+		env := deployEnv
+		if cfg.Deploy != nil && cfg.Deploy.Environment != "" {
+			env = cfg.Deploy.Environment
+		}
+
+		var workflows []string
+		if cfg.Deploy != nil {
+			workflows = cfg.Deploy.Workflows
+		}
 		if len(workflows) == 0 && len(args) > 0 {
 			workflows = args
 		}
 
-		pipeline := deploy.NewPipeline(root, deployEnv, deployDryRun, deployFull, workflows)
+		pipeline := deploy.NewPipeline(root, env, deployDryRun, deployFull, workflows)
 		ctx := context.Background()
 
 		fmt.Println("🚀 Iniciando pipeline de deploy...")
-		fmt.Printf("   Entorno: %s\n", deployEnv)
+		fmt.Printf("   Entorno: %s\n", env)
 		fmt.Printf("   Workflows: %d\n", len(workflows))
 		if deployDryRun {
 			fmt.Println("   Modo: dry-run (sin push)")

@@ -40,8 +40,8 @@ type KfsConfig struct {
 	SpecsDir      string              `yaml:"specs_dir"`
 	SnapshotsDir  string              `yaml:"snapshots_dir"`
 	ReportsDir    string              `yaml:"reports_dir"`
-	Deploy        DeployConfig        `yaml:"deploy"`
-	Notifications NotificationsConfig `yaml:"notifications,omitempty"`
+	Deploy        *DeployConfig        `yaml:"deploy,omitempty"`
+	Notifications *NotificationsConfig `yaml:"notifications,omitempty"`
 }
 
 func LoadConfig(path string) (*KfsConfig, error) {

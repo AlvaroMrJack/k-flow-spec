@@ -95,23 +95,28 @@ modo de prueba (mock/real), y más opciones.`,
 		fmt.Println()
 		fmt.Println("--- Notificaciones ---")
 
-		cfg.Notifications.SlackWebhook = prompt(
+		slack := prompt(
 			"Slack webhook URL (opcional, para CI)",
-			cfg.Notifications.SlackWebhook,
+			"",
 		)
+		if slack != "" {
+			cfg.Notifications = &config.NotificationsConfig{SlackWebhook: slack}
+		}
 
 		fmt.Println()
 		fmt.Println("--- Deploy ---")
 
-		cfg.Deploy.Environment = prompt(
-			"Entorno de deploy (dev/staging/prod)",
-			cfg.Deploy.Environment,
-		)
-		cfg.Deploy.AutoGenerate = promptBool("Auto-generar specs antes de deploy", cfg.Deploy.AutoGenerate)
-		cfg.Deploy.AutoRun = promptBool("Auto-ejecutar tests después de deploy", cfg.Deploy.AutoRun)
+		env := prompt("Entorno de deploy (dev/staging/prod)", "")
+		autoGen := promptBool("Auto-generar specs antes de deploy", false)
+		autoRun := promptBool("Auto-ejecutar tests después de deploy", false)
+		if env != "" || autoGen || autoRun {
+			cfg.Deploy = &config.DeployConfig{
+				Environment:  env,
+				AutoGenerate: autoGen,
+				AutoRun:      autoRun,
+			}
+		}
 
-		// Store mode preference and testFlows in config
-		// Use Deploy.Environment as a hint; for now these are conventions
 		_ = testFlows
 
 		data, err := yaml.Marshal(cfg)

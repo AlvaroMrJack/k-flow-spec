@@ -75,6 +75,9 @@ func (p *Pipeline) Run(ctx context.Context) *DeployResult {
 			return "[dry-run] kapso push ejecutado", nil
 		}
 		args := []string{"push", "workflow"}
+		if p.Environment != "" {
+			args = append(args, "--environment", p.Environment)
+		}
 		if len(p.Workflows) > 0 {
 			args = append(args, p.Workflows...)
 		}

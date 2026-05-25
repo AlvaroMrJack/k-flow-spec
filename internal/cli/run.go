@@ -81,7 +81,7 @@ func runOnce(root string, cfg *config.KfsConfig) error {
 		specsDir := filepath.Join(root, cfg.SpecsDir)
 		entries, err := os.ReadDir(specsDir)
 		if err != nil {
-			return fmt.Errorf("error leyendo directorio de specs: %v", err)
+			return fmt.Errorf("directorio de specs '%s' no encontrado. Usa 'kfs generate' o 'kfs generate -i' para crear specs", cfg.SpecsDir)
 		}
 		for _, entry := range entries {
 			ext := filepath.Ext(entry.Name())
