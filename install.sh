@@ -17,15 +17,28 @@ esac
 if command -v brew &> /dev/null && [[ "$OS" == "darwin" ]]; then
     echo "🍺 Instalando via Homebrew..."
     echo "  Homebrew tap no disponible. Usando Go..."
-    go install github.com/AlvaroMrJack/k-flow-spec@latest
+    go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 elif command -v go &> /dev/null; then
     echo "🔧 Instalando via Go..."
-    go install github.com/AlvaroMrJack/k-flow-spec@latest
+    go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 else
     echo "⚠️  No se encontró Homebrew ni Go."
     echo "   Instala Go desde https://go.dev/dl/ o usa Docker:"
     echo "   docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run --mock"
     exit 1
+fi
+
+# Ensure GOPATH/bin is in PATH
+GOPATH_BIN="$(go env GOPATH)/bin"
+if [[ ":$PATH:" != *":$GOPATH_BIN:"* ]]; then
+    SHELL_RC="$HOME/.zshrc"
+    [[ "$SHELL" == */bash* ]] && SHELL_RC="$HOME/.bashrc"
+    echo "" >> "$SHELL_RC"
+    echo "# k-flow-spec" >> "$SHELL_RC"
+    echo "export PATH=\"\$PATH:$GOPATH_BIN\"" >> "$SHELL_RC"
+    echo "✅ $GOPATH_BIN añadido a PATH en $SHELL_RC"
+    echo "   Recarga: source $SHELL_RC"
+    export PATH="$PATH:$GOPATH_BIN"
 fi
 
 echo ""
