@@ -13,8 +13,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "kfs",
-	Short: "QA automatizado para flujos WhatsApp en Kapso",
-	Long:  `k-flow-spec (kfs) es un CLI spec-driven para testear workflows de Kapso.`,
+	Short: "QA automatizado para flujos WhatsApp",
+	Long:  `k-flow-spec (kfs) es un CLI spec-driven para testear workflows de WhatsApp.`,
 }
 
 func main() {

@@ -1,12 +1,12 @@
 # k-flow-spec
 
-> QA automatizado para flujos WhatsApp en Kapso — Spec-driven, open-source, Go.
+> QA automatizado para flujos WhatsApp — Spec-driven, open-source, Go.
 > Un solo comando y ya estás testeando.
 
 ```bash
 # Instalación (elegí una)
 brew install k-flow-spec
-go install github.com/kapso/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec@latest
 npx k-flow-spec
 
 # Usarlo
@@ -59,10 +59,10 @@ Auth: `X-API-Key: <tu_api_key>`
 | Leer definición | `GET /workflows/{workflow_id}/definition` | Analiza nodos, aristas, configs, variables |
 | Leer variables | `GET /workflows/{workflow_id}/variables` | Descubre variables con sample values |
 | Iniciar ejecución | `POST /workflows/{workflow_id}/executions` | Lanza test con `phone_number` + `variables` |
-| Ver estado + context | `GET /workflows/{workflow_id}/executions/{execution_id}` | Polling: status, current_step, execution_context completo |
-| Simular input | `POST .../executions/{execution_id}/resume` | **Clave** — envía `{kind:"payload", data:"text"}` al `wait_for_response` |
-| Forzar fin | `PATCH .../executions/{execution_id}/status` → `{status:"ended"}` | Cleanup de ejecuciones colgadas + timeout safety |
-| Ver eventos | `GET .../executions/{execution_id}/events` | Traza paso a paso para validar path y decisiones |
+| Ver estado + context | `GET /workflow_executions/{execution_id}` | Polling: status, current_step, execution_context completo |
+| Simular input | `POST /workflow_executions/{execution_id}/resume` | **Clave** — envía `{message:{kind:"payload", data:"text"}}` al `wait_for_response` |
+| Forzar fin | `PATCH /workflow_executions/{execution_id}` → `{workflow_execution:{status:"ended"}}` | Cleanup de ejecuciones colgadas + timeout safety |
+| Ver eventos | `GET /workflow_executions/{execution_id}/events` | Traza paso a paso para validar path y decisiones |
 | Ver triggers | `GET /workflows/{workflow_id}/triggers` | Sabe si el workflow es inbound vs api_call |
 
 ### Rate Limiting (CRÍTICO para el runner)
@@ -81,23 +81,24 @@ El runner debe:
 
 ```
 POST /workflows/{workflow_id}/executions
-  → 202 { tracking_id, execution_id }
+  → 202 { data: { message, id, workflow_id, tracking_id } }
   ↓ polling c/500ms con backoff (max 30s)
-GET /workflows/{workflow_id}/executions/{execution_id}
-  → status: "waiting" (llegó a wait_for_response)
+GET /workflow_executions/{execution_id}
+  → { data: { id, status, current_step, execution_context, events } }
+  ↓ status: "waiting" (llegó a wait_for_response)
   ↓
-POST .../executions/{execution_id}/resume
-  { kind: "payload", data: "respuesta del spec" }
+POST /workflow_executions/{execution_id}/resume
+  { message: { kind: "payload", data: "respuesta del spec" } }
   ↓ polling
-GET .../executions/{execution_id}
+GET /workflow_executions/{execution_id}
   → status: "waiting" | "ended" | "failed"
   ↓ repetir por cada mensaje del spec
   ↓ timeout global por spec (default: 60s, configurable)
-GET .../executions/{execution_id}/events
-  → validar path vs expected + snapshot execution_context
+GET /workflow_executions/{execution_id}/events
+  → { data: [...] } validar path vs expected + snapshot execution_context
   ↓
-PATCH .../executions/{execution_id}/status
-  → { status: "ended" }  # cleanup
+PATCH /workflow_executions/{execution_id}
+  → { data: { status: "ended" } }  # cleanup
 ```
 
 ## Formato Spec (YAML)
@@ -281,20 +282,17 @@ notifications:
 
 ```bash
 # Opción 1: Homebrew (recomendado)
-brew tap kapso/tap
-brew install k-flow-spec
-
 # Opción 2: Go
-go install github.com/kapso/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec@latest
 
 # Opción 3: npm (wrapper)
 npx k-flow-spec init
 
 # Opción 4: Docker (para CI)
-docker run ghcr.io/kapso/k-flow-spec:latest kfs run
+docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run
 
 # Opción 5: One-liner
-curl -fsSL https://kapso.ai/install-kfs.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/install.sh | bash
 ```
 
 ## MVP — Listo para usar
@@ -476,7 +474,7 @@ En ejecuciones posteriores, se compara contra el snapshot. Las diferencias se re
 ### GitHub Action
 
 ```yaml
-# .github/workflows/kapso-test.yml
+# .github/workflows/test.yml
 name: Test Kapso Workflows
 on:
   push:
@@ -503,7 +501,7 @@ jobs:
 ### Docker
 
 ```dockerfile
-FROM ghcr.io/kapso/k-flow-spec:latest AS tester
+FROM ghcr.io/AlvaroMrJack/k-flow-spec:latest AS tester
 COPY kfs-specs/ /specs/
 RUN kfs run --ci
 ```
@@ -979,8 +977,8 @@ kfs deploy --full
 ```
 kfs deploy
   ↓
-1. kapso build                    # Compila workflow.js → definition.json
-2. kapso push workflow <name>     # Despliega a Kapso prod
+1. kfs build                    # Compila workflow.js → definition.json
+2. kfs push workflow <name>     # Despliega a Kapso prod
 3. kfs generate                   # Regenera specs frescos
 4. kfs run --ci                    # Ejecuta tests contra workflow deployeado
 5. Report: pass/fail + duración   # Resultado final
@@ -1063,7 +1061,7 @@ De 0 a QA automatizado de workflows WhatsApp en **5 días**, con:
 
 ```bash
 # Día 1: Instalar + configurar
-go install github.com/kapso/k-flow-spec@latest && kfs init
+go install github.com/AlvaroMrJack/k-flow-spec@latest && kfs init
 
 # Día 1: Generar specs automáticamente
 kfs generate

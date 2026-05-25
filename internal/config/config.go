@@ -19,16 +19,29 @@ type DefaultsConfig struct {
 	PollMaxRetries   int  `yaml:"poll_max_retries"`
 }
 
+type DeployConfig struct {
+	AutoGenerate bool     `yaml:"auto_generate"`
+	AutoRun      bool     `yaml:"auto_run"`
+	Environment  string   `yaml:"environment"`
+	Workflows    []string `yaml:"workflows"`
+}
+
+type NotificationsConfig struct {
+	SlackWebhook string `yaml:"slack_webhook,omitempty"`
+}
+
 type KfsConfig struct {
-	Project      string          `yaml:"project"`
-	APIKey       string          `yaml:"api_key"`
-	BaseURL      string          `yaml:"base_url"`
-	PhoneNumber  string          `yaml:"phone_number"`
-	RateLimit    RateLimitConfig `yaml:"rate_limit"`
-	Defaults     DefaultsConfig  `yaml:"defaults"`
-	SpecsDir     string          `yaml:"specs_dir"`
-	SnapshotsDir string          `yaml:"snapshots_dir"`
-	ReportsDir   string          `yaml:"reports_dir"`
+	Project       string              `yaml:"project"`
+	APIKey        string              `yaml:"api_key"`
+	BaseURL       string              `yaml:"base_url"`
+	PhoneNumber   string              `yaml:"phone_number"`
+	RateLimit     RateLimitConfig     `yaml:"rate_limit"`
+	Defaults      DefaultsConfig      `yaml:"defaults"`
+	SpecsDir      string              `yaml:"specs_dir"`
+	SnapshotsDir  string              `yaml:"snapshots_dir"`
+	ReportsDir    string              `yaml:"reports_dir"`
+	Deploy        DeployConfig        `yaml:"deploy"`
+	Notifications NotificationsConfig `yaml:"notifications,omitempty"`
 }
 
 func LoadConfig(path string) (*KfsConfig, error) {

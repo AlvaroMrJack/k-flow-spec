@@ -1,0 +1,46 @@
+name: 'k-flow-spec Action'
+description: 'Test Kapso WhatsApp workflows with k-flow-spec'
+author: 'k-flow-spec'
+
+inputs:
+  api_key:
+    description: 'Kapso API key'
+    required: true
+  phone_number:
+    description: 'Test phone number'
+    required: false
+    default: '+56900000000'
+  command:
+    description: 'Command to run (run, test, deploy)'
+    required: false
+    default: 'test'
+  specs_dir:
+    description: 'Specs directory'
+    required: false
+    default: 'kfs-specs'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version: "1.26"
+
+    - name: Install k-flow-spec
+      shell: bash
+      run: go install github.com/AlvaroMrJack/k-flow-spec@latest
+
+    - name: Run kfs ${{ inputs.command }}
+      shell: bash
+      env:
+        KAPSO_API_KEY: ${{ inputs.api_key }}
+        TEST_PHONE: ${{ inputs.phone_number }}
+      run: |
+        kfs ${{ inputs.command }} --ci
+
+    - name: Upload reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: kfs-reports
+        path: kfs-reports/

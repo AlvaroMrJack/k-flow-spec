@@ -1,15 +1,14 @@
 # k-flow-spec
 
-> QA automatizado para flujos WhatsApp en Kapso — Spec-driven, open-source, Go.
+> QA automatizado para flujos WhatsApp — Spec-driven, open-source, Go.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/kapso/k-flow-spec.svg)](https://pkg.go.dev/github.com/kapso/k-flow-spec)
-[![CI](https://github.com/kapso/k-flow-spec/actions/workflows/test.yml/badge.svg)](https://github.com/kapso/k-flow-spec/actions/workflows/test.yml)
-[![Docker](https://img.shields.io/docker/v/ghcr.io/kapso/k-flow-spec?label=Docker)](https://github.com/kapso/k-flow-spec/pkgs/container/k-flow-spec)
+[![Go Reference](https://pkg.go.dev/badge/github.com/AlvaroMrJack/k-flow-spec.svg)](https://pkg.go.dev/github.com/AlvaroMrJack/k-flow-spec)
+[![CI](https://github.com/AlvaroMrJack/k-flow-spec/actions/workflows/test.yml/badge.svg)](https://github.com/AlvaroMrJack/k-flow-spec/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ```bash
 # Sin API key, sin conexión, en 5 segundos
-go install github.com/kapso/k-flow-spec@latest && kfs run --mock
+go install github.com/AlvaroMrJack/k-flow-spec@latest && kfs run --mock
 ```
 
 ---
@@ -28,16 +27,17 @@ Hoy, testear un workflow de WhatsApp es agarrar el celular, escribir mensajes a 
 
 ```bash
 # 1. Instalar
-go install github.com/kapso/k-flow-spec@latest
+go install github.com/AlvaroMrJack/k-flow-spec@latest
 
 # 2. Probar al toque (sin API key, sin conexión)
 cd tu-proyecto/
+kfs init
 kfs run --mock
 
-# 3. Conectar a Kapso real
-kfs init                        # Pega tu API key
+# 3. Conectar a API real
+kfs init                        # Configura tu API key
 kfs generate                    # Descubre workflows + genera specs
-kfs run                         # Ejecuta contra Kapso real
+kfs run                         # Ejecuta contra API real
 ```
 
 Salida:
@@ -55,21 +55,14 @@ Results: 2 passed, 1 failed, 0 skipped (20.7s)
 ## Instalación
 
 ```bash
-# Homebrew (recomendado)
-brew tap kapso/tap
-brew install k-flow-spec
-
 # Go
-go install github.com/kapso/k-flow-spec@latest
-
-# npm
-npx k-flow-spec init
+go install github.com/AlvaroMrJack/k-flow-spec@latest
 
 # Docker
-docker run ghcr.io/kapso/k-flow-spec:latest kfs run
+docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run
 
 # One-liner
-curl -fsSL https://kapso.ai/install-kfs.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/install.sh | bash
 ```
 
 ---
@@ -77,9 +70,9 @@ curl -fsSL https://kapso.ai/install-kfs.sh | bash
 ## Cómo funciona
 
 1. **`kfs init`** — Crea `kfs.yaml` con tu API key (o modo mock si no tienes)
-2. **`kfs mock`** — Inicia servidor HTTP que simula la API de Kapso (para dev sin conexión)
+2. **`kfs mock`** — Inicia servidor HTTP que simula la API de WhatsApp (para dev sin conexión)
 3. **`kfs generate`** — Descubre workflows via API (o fixtures), parsea el grafo, genera specs YAML
-4. **`kfs run`** — Ejecuta specs contra Kapso real (`kfs run`) o contra mock (`kfs run --mock`)
+4. **`kfs run`** — Ejecuta specs contra API real (`kfs run`) o contra mock (`kfs run --mock`)
 5. **`kfs fix`** — Analiza specs rotos y los repara automáticamente
 6. **`kfs ui`** — Dashboard web local con historial, tendencias y snapshot diff
 7. **`kfs test`** — `generate` + `run` en un solo comando
@@ -93,15 +86,15 @@ curl -fsSL https://kapso.ai/install-kfs.sh | bash
 ```
 POST /workflows/{id}/executions → 202 (tracking_id)
   ↓ polling c/500ms
-GET .../executions/{id}         → status: "waiting"
+GET /workflow_executions/{id}   → status: "waiting"
   ↓
-POST .../resume {kind:"payload", data:"respuesta"}
+POST /workflow_executions/{id}/resume {message:{kind:"payload", data:"respuesta"}}
   ↓ polling
-GET .../executions/{id}         → "waiting" | "ended" | "failed"
+GET /workflow_executions/{id}   → "waiting" | "ended" | "failed"
   ↓ repetir por cada mensaje del spec
-GET .../events                  → validar path + snapshot
+GET /workflow_executions/{id}/events → validar path + snapshot
   ↓
-PATCH .../status → {status:"ended"}  # cleanup
+PATCH /workflow_executions/{id} → {workflow_execution:{status:"ended"}}  # cleanup
 ```
 
 ---
@@ -161,7 +154,6 @@ Cada spec captura el `execution_context` completo como snapshot. En la segunda e
 
 ```bash
 kfs run --update-snapshots  # Actualizar todos los snapshots
-kfs run --snapshot booking  # Solo actualizar uno
 ```
 
 ---
@@ -169,8 +161,8 @@ kfs run --snapshot booking  # Solo actualizar uno
 ## CI/CD
 
 ```yaml
-# .github/workflows/kapso-test.yml
-name: Test Kapso Workflows
+# .github/workflows/test.yml
+name: Test
 on:
   push:
     paths: ["workflows/**"]
@@ -180,21 +172,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: k-flow-spec/action@v1
+      - uses: actions/setup-go@v5
         with:
-          api_key: ${{ secrets.KAPSO_API_KEY }}
-          phone_number: ${{ secrets.TEST_PHONE }}
-      - uses: dorny/test-results@v1
-        if: always()
-        with:
-          path: kfs-reports/*.xml
+          go-version: "1.26"
+      - run: go install github.com/AlvaroMrJack/k-flow-spec@latest
+      - run: kfs test --ci
+        env:
+          KAPSO_API_KEY: ${{ secrets.KAPSO_API_KEY }}
 ```
 
 ---
 
 ## `kfs run --mock` — Sin API key, sin conexión
 
-El mock server embebido simula toda la API de Kapso. Ideal para onboarding, desarrollo, y CI cuando no quieres depender de Kapso upstream.
+El mock server embebido simula toda la API de WhatsApp. Ideal para onboarding, desarrollo, y CI cuando no quieres depender de upstream.
 
 ```bash
 # Iniciar mock + correr specs, todo en uno
@@ -202,10 +193,6 @@ kfs run --mock
 
 # Iniciar mock server standalone
 kfs mock
-
-# Especificar fixtures custom (mock server)
-kfs mock --fixtures ./test-fixtures/
-kfs run --mock              # Usa los fixtures cargados
 ```
 
 Viene con un workflow de ejemplo pre-cargado, así que `kfs run --mock` funciona desde el primer `go install`, sin configuración.
@@ -232,7 +219,7 @@ kfs fix --interactive
 | Nodo renombrado | Actualiza path + decisions |
 | Rama eliminada | Elimina decisiones obsoletas |
 | Variable cambiada | Renombra en given.variables |
-| Snapshot desactualizado | kfs fix --update-snapshots |
+| Snapshot desactualizado | kfs run --update-snapshots |
 
 ---
 
@@ -268,32 +255,6 @@ kfs run-broadcast --mock
 kfs run-broadcast --dry-run
 ```
 
-### Spec para Broadcasts
-
-```yaml
-# kfs-specs/promo-july.yml
-name: "Promo July - Broadcast Test"
-kind: broadcast
-
-given:
-  template_id: "promo_july_2026"
-  recipients:
-    - phone: "+56900000001"
-      variables: { first_name: "Juan", discount: "50%" }
-
-when:
-  send: {}
-
-then:
-  status: "completed"
-  metrics:
-    sent_count: 1
-    failed_count: 0
-    delivery_rate: 1.0
-```
-
-El mock server también simula Broadcasts: crea, acepta recipients, y responde con métricas simuladas.
-
 ---
 
 ## `kfs flow` — Testing de WhatsApp Flows
@@ -311,41 +272,11 @@ kfs flow --mock
 kfs flow --open
 ```
 
-### Spec para Flows
-
-```yaml
-# kfs-specs/checkout-flow.yml
-name: "Checkout - Happy Path"
-kind: flow
-
-given:
-  flow_id: "123456789012345"
-  screen: "WELCOME"
-  initial_data:
-    phone_number: "+56900000000"
-
-when:
-  screens:
-    - screen: "WELCOME"
-      action: "next"
-    - screen: "SERVICES"
-      action: "select"
-      fields: { service: "corte clásico" }
-    - screen: "CONFIRM"
-      action: "confirm"
-
-then:
-  terminal_screen: "THANK_YOU"
-  submitted_data:
-    service: "corte clásico"
-  webhook_received: true
-```
-
 ---
 
 ## `kfs webhook` — Webhook Receiver
 
-Levanta un servidor HTTP temporal, lo registra como webhook en Kapso, captura eventos y los valida contra el spec.
+Levanta un servidor HTTP temporal, lo registra como webhook, captura eventos y los valida contra el spec.
 
 ```bash
 # Webhook receiver + correr spec
@@ -356,17 +287,6 @@ kfs webhook --verbose
 
 # Con tunnel ngrok automático
 kfs webhook --tunnel
-```
-
-```yaml
-then:
-  webhook:
-    events_expected:
-      - eventType: "workflow.execution.started"
-      - eventType: "workflow.execution.completed"
-    timeout_seconds: 10
-    payload_contains:
-      status: "ended"
 ```
 
 ---
@@ -384,26 +304,6 @@ kfs deploy --dry-run
 
 # Deploy completo + broadcast + webhook
 kfs deploy --full
-```
-
-```yaml
-# kfs.yaml
-deploy:
-  auto_generate: true
-  auto_run: true
-  workflows:
-    - support-router
-    - booking-flow
-```
-
-### En CI/CD
-
-```yaml
-steps:
-  - uses: k-flow-spec/action@v1
-    with:
-      api_key: ${{ secrets.KAPSO_API_KEY }}
-      command: deploy
 ```
 
 ---
@@ -466,7 +366,7 @@ steps:
 ```yaml
 # kfs.yaml
 project: mi-proyecto
-api_key: ${KAPSO_API_KEY}
+api_key: ${API_KEY}
 phone_number: "+56900000000"
 
 rate_limit:
@@ -486,9 +386,9 @@ defaults:
 `k-flow-spec` está construido para ser robusto y extensible:
 
 - **Auto-Discovery**: Al igual que `git`, `kfs` escala hacia arriba en el árbol de directorios buscando tu `kfs.yaml`. Esto te permite ejecutar tests desde cualquier subcarpeta de tu proyecto sin problemas de paths relativos.
-- **Core como Librería (`pkg/`)**: El motor de testing, el parser de specs y el cliente de Kapso están expuestos públicamente. Puedes importar `github.com/AlvaroMrJack/k-flow-spec/pkg/...` en tus propios proyectos Go para interaccionar con Kapso programáticamente.
+- **Core como Librería (`pkg/`)**: El motor de testing, el parser de specs y el cliente HTTP están expuestos públicamente. Puedes importar `github.com/AlvaroMrJack/k-flow-spec/pkg/...` en tus propios proyectos Go.
 - **Graceful Shutdown**: Manejo seguro de señales (`Ctrl+C`). Si cancelas una ejecución en progreso, el motor termina de procesar los requests en vuelo limpiamente y genera un reporte parcial antes de salir.
-- **Logging Especializado**: Salida limpia en terminal con spinners y colores, respaldado por volcados de debug asíncronos a archivo usando el `slog` de Go 1.22+.
+- **Logging Especializado**: Salida limpia en terminal, respaldado por volcados de debug asíncronos a archivo usando el `slog` de Go 1.22+.
 
 ---
 
@@ -514,14 +414,14 @@ defaults:
 | 2 | Día 2 | `kfs run` (real + --mock) + polling + validación + `kfs fix` |
 | 3 | Día 3 | `kfs test` + CI + snapshot + reportes + `kfs ui` |
 | 4 | Día 4 | MCP server + `kfs webhook` + `kfs flow` + parallel runner |
-| 5 | Día 5 | `kfs run-broadcast` + `kfs deploy` + Homebrew + Docker + docs |
+| 5 | Día 5 | `kfs run-broadcast` + `kfs deploy` + Docker + docs |
 
 ---
 
 ## Contribuir
 
 ```bash
-git clone https://github.com/kapso/k-flow-spec
+git clone https://github.com/AlvaroMrJack/k-flow-spec
 cd k-flow-spec
 go build ./cmd/kfs
 go test ./...

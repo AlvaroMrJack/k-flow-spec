@@ -5,6 +5,7 @@
 *.so
 *.dylib
 bin/
+/kfs
 
 # Test binary, built with `go test -c`
 *.test
