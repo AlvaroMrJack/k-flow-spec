@@ -7,6 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	runConfigure bool
+)
+
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Inicializa un proyecto k-flow-spec en el directorio actual",
@@ -30,12 +34,25 @@ defaults:
 		if err := os.WriteFile("kfs.yaml", []byte(content), 0644); err != nil {
 			return err
 		}
-		
-		fmt.Println("kfs.yaml creado exitosamente. Ahora puedes editarlo y usar kfs generate.")
+
+		fmt.Println("✅ kfs.yaml creado exitosamente.")
+
+		if runConfigure {
+			if err := configureCmd.RunE(cmd, args); err != nil {
+				return err
+			}
+		} else {
+			fmt.Println()
+			fmt.Println("Siguientes pasos:")
+			fmt.Println("  1. kfs configure   — Configura tu API key y preferencias")
+			fmt.Println("  2. kfs generate    — Genera specs desde tus flujos")
+			fmt.Println("  3. kfs run --mock  — Ejecuta pruebas en modo simulado")
+		}
 		return nil
 	},
 }
 
 func init() {
+	initCmd.Flags().BoolVar(&runConfigure, "configure", false, "Ejecutar el asistente de configuración después de init")
 	RootCmd.AddCommand(initCmd)
 }

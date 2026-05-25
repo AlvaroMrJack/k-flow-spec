@@ -20,10 +20,10 @@ type DefaultsConfig struct {
 }
 
 type DeployConfig struct {
-	AutoGenerate bool     `yaml:"auto_generate"`
-	AutoRun      bool     `yaml:"auto_run"`
-	Environment  string   `yaml:"environment"`
-	Workflows    []string `yaml:"workflows"`
+	AutoGenerate bool     `yaml:"auto_generate,omitempty"`
+	AutoRun      bool     `yaml:"auto_run,omitempty"`
+	Environment  string   `yaml:"environment,omitempty"`
+	Workflows    []string `yaml:"workflows,omitempty"`
 }
 
 type NotificationsConfig struct {
