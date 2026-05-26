@@ -39,7 +39,14 @@ defaults:
 			return err
 		}
 
+		envContent := `# k-flow-spec environment variables
+# Copia este archivo como .env y completa los valores
+KAPSO_API_KEY=tu-api-key-aqui
+`
+		os.WriteFile(".env.example", []byte(envContent), 0644)
+
 		fmt.Println("✅ kfs.yaml creado exitosamente.")
+		fmt.Println("✅ .env.example creado — copia a .env y agrega tu KAPSO_API_KEY")
 
 		if runConfigure {
 			if err := configureCmd.RunE(cmd, args); err != nil {

@@ -130,9 +130,32 @@ modo de prueba (mock/real), y más opciones.`,
 
 		fmt.Println()
 		fmt.Println("✅ kfs.yaml actualizado exitosamente.")
+
+		// Offer to move API key to .env if it's in plain text
 		if cfg.APIKey != "" && cfg.APIKey != "${KAPSO_API_KEY}" {
-			fmt.Println("⚠️  Tu API key está en kfs.yaml. No lo commits a git.")
-			fmt.Println("   Mejor usa ${KAPSO_API_KEY} y define la variable de entorno.")
+			fmt.Println()
+			fmt.Println("⚠️  Tu API key está en texto plano en kfs.yaml.")
+			fmt.Println("   Si subes esto a git, cualquiera puede ver tu key.")
+			if promptBool("¿Mover la API key a .env (recomendado)?", true) {
+				envPath := filepath.Join(root, ".env")
+				envLine := fmt.Sprintf("KAPSO_API_KEY=%s\n", cfg.APIKey)
+				if err := os.WriteFile(envPath, []byte(envLine), 0600); err != nil {
+					return fmt.Errorf("error guardando .env: %v", err)
+				}
+				fmt.Println("✅ API key guardada en .env")
+				fmt.Println("⚠️  Asegúrate de agregar .env a .gitignore")
+
+				// Update kfs.yaml to use env var instead of plain text
+				cfg.APIKey = "${KAPSO_API_KEY}"
+				data, err := yaml.Marshal(cfg)
+				if err != nil {
+					return fmt.Errorf("error generando YAML: %v", err)
+				}
+				if err := os.WriteFile(cfgPath, data, 0644); err != nil {
+					return fmt.Errorf("error guardando kfs.yaml: %v", err)
+				}
+				fmt.Println("✅ kfs.yaml actualizado para usar ${KAPSO_API_KEY}")
+			}
 		}
 
 		return nil
