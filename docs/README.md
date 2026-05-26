@@ -40,6 +40,7 @@ kfs run --mock
 # 2. Conectar a API real (interactivo)
 kfs init --configure             # Crea proyecto + asistente paso a paso
 kfs generate -i                  # Genera specs interactivamente
+kfs learn                        # O grábalos ejecutando el flujo en vivo
 kfs run                          # Ejecuta contra API real
 ```
 
@@ -77,13 +78,14 @@ curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/insta
 3. **`kfs mock`** — Inicia servidor HTTP que simula la API de WhatsApp (para dev sin conexión)
 4. **`kfs generate`** o **`kfs generate -i`** — Descubre workflows via API (o fixtures), genera specs YAML. Modo interactivo pregunta mock/real, Flows, selección de workflows
 5. **`kfs run`** — Ejecuta specs contra API real (`kfs run`) o contra mock (`kfs run --mock`)
-6. **`kfs fix`** — Analiza specs rotos y los repara automáticamente
-7. **`kfs ui`** — Dashboard web local con historial, tendencias y snapshot diff
-8. **`kfs test`** — `generate` + `run` en un solo comando
-9. **`kfs run-broadcast`** — Testea campañas Broadcast API
-10. **`kfs flow`** — Simula navegación de WhatsApp Flows
-11. **`kfs webhook`** — Webhook receiver + validador en tiempo real
-12. **`kfs deploy`** — Build + push + test pipeline
+6. **`kfs learn`** — Graba un spec ejecutando el flujo real paso a paso desde la terminal
+7. **`kfs fix`** — Analiza specs rotos y los repara automáticamente
+8. **`kfs ui`** — Dashboard web local con historial, tendencias y snapshot diff
+9. **`kfs test`** — `generate` + `run` en un solo comando
+10. **`kfs run-broadcast`** — Testea campañas Broadcast API
+11. **`kfs flow`** — Simula navegación de WhatsApp Flows
+12. **`kfs webhook`** — Webhook receiver + validador en tiempo real
+13. **`kfs deploy`** — Build + push + test pipeline
 
 ### Ciclo de testing
 
@@ -200,6 +202,43 @@ kfs mock
 ```
 
 Viene con un workflow de ejemplo pre-cargado, así que `kfs run --mock` funciona desde el primer `go install`, sin configuración.
+
+---
+
+## `kfs learn` — Grabación interactiva de specs
+
+Ejecuta el workflow real y te va pidiendo los mensajes uno por uno. Al final, genera el spec con la ruta real, las decisiones del AI y tus respuestas.
+
+```bash
+# Elegir workflow de la lista
+kfs learn
+
+# Especificar workflow directamente
+kfs learn --workflow f1704737-...
+
+# Ejemplo de sesión:
+$ kfs learn --workflow f1704737-...
+  Conectando con Kapso API...
+  ✓ Ejecución iniciada
+
+  ╔══════════════════════════════════════╗
+  ║  Grabando flujo — escribe 'done'     ║
+  ╚══════════════════════════════════════╝
+
+  ─── Workflow espera en: wait_menu_choice ───
+  Tú > Hola quiero agendar un corte
+  ─── Workflow espera en: wait_client_name ───
+  Tú > Juan Pérez
+  ...
+  Tú > done
+
+  ✓ Spec guardado: kfs-specs/corteya-bot-v3-learned.yaml
+    - 3 mensajes grabados
+    - 12 nodos en la ruta
+    - 2 decisiones capturadas
+```
+
+A diferencia de `kfs generate` (que crea un spec estático con placeholders), `kfs learn` ejecuta el flujo real y captura exactamente lo que pasó: el camino que tomó el AI, las decisiones en cada router, y los mensajes que escribiste.
 
 ---
 
@@ -343,6 +382,8 @@ kfs deploy --full
 | `kfs generate -i` | Generación paso a paso: mock/real, Flows, selección de workflows |
 | `kfs generate --save-fixtures` | Genera specs + fixtures para modo mock |
 | `kfs generate --workflow <id>` | Genera spec para un workflow específico |
+| `kfs learn` | Graba un spec ejecutando el flujo real paso a paso desde la terminal |
+| `kfs learn --workflow <id>` | Graba un workflow específico sin tener que elegir |
 | **Ejecución** | |
 | `kfs run` | Ejecuta todos los specs contra API real |
 | `kfs run --mock` | Ejecuta contra mock server embebido (sin API key) |
