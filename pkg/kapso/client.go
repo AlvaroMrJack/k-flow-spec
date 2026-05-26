@@ -21,7 +21,7 @@ func NewClient(baseURL, apiKey string) *Client {
 		BaseURL: baseURL,
 		APIKey:  apiKey,
 		HTTPClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 120 * time.Second,
 		},
 	}
 }
@@ -168,11 +168,35 @@ func (c *Client) UpdateExecutionStatus(ctx context.Context, workflowID, executio
 }
 
 func (c *Client) GetEvents(ctx context.Context, workflowID, executionID string) ([]Event, error) {
-	var out struct {
-		Data []Event `json:"data"`
+	var allEvents []Event
+	after := ""
+
+	for {
+		path := fmt.Sprintf("/workflow_executions/%s/events?limit=100", executionID)
+		if after != "" {
+			path += "&after=" + after
+		}
+
+		var out struct {
+			Data   []Event `json:"data"`
+			Paging struct {
+				Next *string `json:"next"`
+			} `json:"paging"`
+		}
+		err := c.do(ctx, "GET", path, nil, &out)
+		if err != nil {
+			return allEvents, err
+		}
+
+		allEvents = append(allEvents, out.Data...)
+
+		if out.Paging.Next == nil || *out.Paging.Next == "" {
+			break
+		}
+		after = *out.Paging.Next
 	}
-	err := c.do(ctx, "GET", fmt.Sprintf("/workflow_executions/%s/events", executionID), nil, &out)
-	return out.Data, err
+
+	return allEvents, nil
 }
 
 func (c *Client) GetTriggers(ctx context.Context, workflowID string) ([]Trigger, error) {

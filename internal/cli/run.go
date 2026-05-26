@@ -102,10 +102,11 @@ func runOnce(root string, cfg *config.KfsConfig) error {
 	}
 
 	// Run specs
-	engine := runner.NewEngine(client, cfg)
-	engine.Interactive = runInteractive
-
 	scheduler := runner.NewScheduler(client, cfg)
+	scheduler.SetInteractive(runInteractive)
+	scheduler.SetProgress(func(format string, args ...interface{}) {
+		fmt.Printf(format+"\n", args...)
+	})
 	results := scheduler.RunAll(ctx, specs)
 
 	// Print summary
@@ -113,8 +114,6 @@ func runOnce(root string, cfg *config.KfsConfig) error {
 	for _, res := range results {
 		if res.Passed {
 			passed++
-			fmt.Printf("✓ %s (%v) — path: %d, decisions: %d, snapshot: ✓\n",
-				res.SpecName, res.Duration, len(res.ActualPath), len(res.ActualDecisions))
 		} else {
 			failed++
 			fmt.Printf("✗ %s (%v)", res.SpecName, res.Duration)

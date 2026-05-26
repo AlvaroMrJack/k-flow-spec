@@ -33,10 +33,19 @@ type Engine struct {
 	client      *kapso.Client
 	cfg         *config.KfsConfig
 	Interactive bool // If true, prints debug info during execution
+	Progress    func(format string, args ...interface{})
 }
 
 func NewEngine(client *kapso.Client, cfg *config.KfsConfig) *Engine {
 	return &Engine{client: client, cfg: cfg}
+}
+
+func (e *Engine) logProgress(format string, args ...interface{}) {
+	if e.Progress != nil {
+		e.Progress(format, args...)
+	} else {
+		slog.Info(fmt.Sprintf(format, args...))
+	}
 }
 
 func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
@@ -57,7 +66,7 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	slog.Debug("starting execution", "spec", s.Name, "workflow", s.Workflow)
+	e.logProgress("▶ Iniciando ejecución de spec: %s", s.Name)
 
 	phone := s.Given.PhoneNumber
 	if phone == "" {
@@ -74,9 +83,13 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 		result.Duration = time.Since(start)
 		return result
 	}
-	slog.Debug("execution started", "execution_id", execResp.ExecutionID)
+	e.logProgress("  ✓ Ejecución iniciada (id: %s)", execResp.ExecutionID)
 
+	cleanupNeeded := true
 	defer func() {
+		if !cleanupNeeded {
+			return
+		}
 		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := e.client.UpdateExecutionStatus(cleanupCtx, s.Workflow, execResp.ExecutionID, "ended"); err != nil {
@@ -87,7 +100,10 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 	actualPath := []string{}
 	actualDecisions := map[string]string{}
 
+	numMessages := len(s.When.Messages)
+
 	for i, msg := range s.When.Messages {
+		e.logProgress("  ⏳ Esperando que el workflow esté listo para recibir mensaje %d/%d...", i+1, numMessages)
 		status, err := PollUntil(ctx, e.client, s.Workflow, execResp.ExecutionID,
 			time.Duration(timeout)*time.Second, "waiting", "ended", "failed")
 		if err != nil {
@@ -101,9 +117,11 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 		}
 
 		if status.Status == "ended" || status.Status == "failed" {
+			e.logProgress("  ⚠ La ejecución terminó antes de enviar el mensaje %d/%d (status: %s)", i+1, numMessages, status.Status)
 			break
 		}
 
+		e.logProgress("  → Enviando mensaje %d/%d: %q", i+1, numMessages, msg.User)
 		if err := e.client.ResumeExecution(ctx, s.Workflow, execResp.ExecutionID, msg.User); err != nil {
 			result.Passed = false
 			result.Errors = append(result.Errors, RunError{
@@ -113,11 +131,11 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 			result.Duration = time.Since(start)
 			return result
 		}
-		slog.Debug("sent message", "msg", msg.User)
 	}
 
+	e.logProgress("  ⏳ Esperando que la ejecución finalice...")
 	finalStatus, err := PollUntil(ctx, e.client, s.Workflow, execResp.ExecutionID,
-		time.Duration(timeout)*time.Second, "ended", "failed")
+		time.Duration(timeout)*time.Second, "ended", "failed", "waiting", "handoff")
 	if err != nil {
 		result.Passed = false
 		result.Errors = append(result.Errors, RunError{
@@ -127,18 +145,31 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 		result.Duration = time.Since(start)
 		return result
 	}
+	e.logProgress("  ✓ Ejecución finalizada (status: %s)", finalStatus.Status)
+	cleanupNeeded = false
 
 	evts, err := e.client.GetEvents(ctx, s.Workflow, execResp.ExecutionID)
-	if err == nil {
+	if err != nil {
+		e.logProgress("  ⚠ Error obteniendo eventos: %v", err)
+	} else {
+		e.logProgress("  ✓ Eventos obtenidos: %d", len(evts))
+		// API returns newest-first; reverse for chronological order
+		for i, j := 0, len(evts)-1; i < j; i, j = i+1, j-1 {
+			evts[i], evts[j] = evts[j], evts[i]
+		}
 		for _, ev := range evts {
 			if ev.EventType == "step_entered" || ev.EventType == "execution_started" {
-				if stepID, ok := ev.Step["identifier"]; ok {
-					actualPath = append(actualPath, stepID)
+				if step, ok := ev.Step["identifier"]; ok {
+					if stepID, ok := step.(string); ok {
+						actualPath = append(actualPath, stepID)
+					}
 				}
 			}
 			if ev.EventType == "decision_evaluated" && ev.EdgeLabel != "" {
-				if stepID, ok := ev.Step["identifier"]; ok {
-					actualDecisions[stepID] = ev.EdgeLabel
+				if step, ok := ev.Step["identifier"]; ok {
+					if stepID, ok := step.(string); ok {
+						actualDecisions[stepID] = ev.EdgeLabel
+					}
 				}
 			}
 		}
@@ -156,6 +187,9 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 	result.ActualPath = actualPath
 	result.ActualDecisions = actualDecisions
 
+	e.logProgress("  ✓ Ruta real: %v", actualPath)
+	e.logProgress("  ✓ Decisiones reales: %v", actualDecisions)
+
 	errs := Validate(s, result)
 	if len(errs) > 0 {
 		result.Passed = false
@@ -163,5 +197,10 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 	}
 
 	result.Duration = time.Since(start)
+	if result.Passed {
+		e.logProgress("  ✓ ¡Spec superado! (%v)", result.Duration)
+	} else {
+		e.logProgress("  ✗ Spec fallido (%v) — %s", result.Duration, result.Errors[0].Message)
+	}
 	return result
 }

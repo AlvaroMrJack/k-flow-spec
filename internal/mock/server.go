@@ -280,23 +280,23 @@ func (s *Server) handleStartExecution(w http.ResponseWriter, r *http.Request, wo
 		Events: []kapso.Event{
 			{
 				EventType: "execution_started",
-				Timestamp: time.Now(),
+				CreatedAt: time.Now(),
 				Payload:   map[string]interface{}{"workflow_id": workflowID},
 			},
 			{
 				EventType: "step_entered",
-				Timestamp: time.Now(),
-				Step:      map[string]string{"identifier": "start"},
+				CreatedAt: time.Now(),
+				Step:      map[string]interface{}{"identifier": "start"},
 			},
 			{
 				EventType: "step_entered",
-				Timestamp: time.Now().Add(time.Millisecond),
-				Step:      map[string]string{"identifier": "intro"},
+				CreatedAt: time.Now().Add(time.Millisecond),
+				Step:      map[string]interface{}{"identifier": "intro"},
 			},
 			{
 				EventType: "step_entered",
-				Timestamp: time.Now().Add(2 * time.Millisecond),
-				Step:      map[string]string{"identifier": "wait_reply"},
+				CreatedAt: time.Now().Add(2 * time.Millisecond),
+				Step:      map[string]interface{}{"identifier": "wait_reply"},
 			},
 		},
 	}
@@ -364,16 +364,16 @@ func (s *Server) handleResumeExecution(w http.ResponseWriter, r *http.Request, e
 
 	exec.Events = append(exec.Events, kapso.Event{
 		EventType: "user_input_received",
-		Timestamp: time.Now(),
-		Step:      map[string]string{"identifier": fmt.Sprintf("step_%d", len(exec.Messages))},
+		CreatedAt: time.Now(),
+		Step:      map[string]interface{}{"identifier": fmt.Sprintf("step_%d", len(exec.Messages))},
 		Payload:   map[string]interface{}{"content": req.Message.Data},
 	})
 
 	// Simulate entering the classify node
 	exec.Events = append(exec.Events, kapso.Event{
 		EventType: "step_entered",
-		Timestamp: time.Now(),
-		Step:      map[string]string{"identifier": "classify"},
+		CreatedAt: time.Now(),
+		Step:      map[string]interface{}{"identifier": "classify"},
 	})
 
 	if strings.Contains(strings.ToLower(req.Message.Data), "factura") ||
@@ -381,8 +381,8 @@ func (s *Server) handleResumeExecution(w http.ResponseWriter, r *http.Request, e
 		strings.Contains(strings.ToLower(req.Message.Data), "cobro") {
 		exec.Events = append(exec.Events, kapso.Event{
 			EventType: "decision_evaluated",
-			Timestamp: time.Now(),
-			Step:      map[string]string{"identifier": "classify"},
+			CreatedAt: time.Now(),
+			Step:      map[string]interface{}{"identifier": "classify"},
 			EdgeLabel: "billing",
 			Payload:   map[string]interface{}{"reasoning": "User mentioned billing-related terms"},
 		})
@@ -395,8 +395,8 @@ func (s *Server) handleResumeExecution(w http.ResponseWriter, r *http.Request, e
 		strings.Contains(strings.ToLower(req.Message.Data), "problema") {
 		exec.Events = append(exec.Events, kapso.Event{
 			EventType: "decision_evaluated",
-			Timestamp: time.Now(),
-			Step:      map[string]string{"identifier": "classify"},
+			CreatedAt: time.Now(),
+			Step:      map[string]interface{}{"identifier": "classify"},
 			EdgeLabel: "technical",
 			Payload:   map[string]interface{}{"reasoning": "User mentioned technical issue terms"},
 		})
@@ -407,8 +407,8 @@ func (s *Server) handleResumeExecution(w http.ResponseWriter, r *http.Request, e
 	} else {
 		exec.Events = append(exec.Events, kapso.Event{
 			EventType: "decision_evaluated",
-			Timestamp: time.Now(),
-			Step:      map[string]string{"identifier": "classify"},
+			CreatedAt: time.Now(),
+			Step:      map[string]interface{}{"identifier": "classify"},
 			EdgeLabel: "other",
 			Payload:   map[string]interface{}{"reasoning": "No specific keywords detected"},
 		})
@@ -420,13 +420,13 @@ func (s *Server) handleResumeExecution(w http.ResponseWriter, r *http.Request, e
 
 	exec.Events = append(exec.Events, kapso.Event{
 		EventType: "step_entered",
-		Timestamp: time.Now(),
-		Step:      map[string]string{"identifier": "handoff"},
+		CreatedAt: time.Now(),
+		Step:      map[string]interface{}{"identifier": "handoff"},
 	})
 
 	exec.Events = append(exec.Events, kapso.Event{
 		EventType: "execution_ended",
-		Timestamp: time.Now(),
+		CreatedAt: time.Now(),
 	})
 	exec.Status = "ended"
 
@@ -455,7 +455,7 @@ func (s *Server) handleUpdateStatus(w http.ResponseWriter, r *http.Request, exec
 	if req.WorkflowExecution.Status == "ended" {
 		exec.Events = append(exec.Events, kapso.Event{
 			EventType: "execution_ended",
-			Timestamp: time.Now(),
+			CreatedAt: time.Now(),
 		})
 	}
 

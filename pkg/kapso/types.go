@@ -47,17 +47,19 @@ type ExecutionContext struct {
 }
 
 type ExecutionStatus struct {
-	Status           string           `json:"status"`
-	CurrentStep      string           `json:"current_step"`
-	ExecutionContext ExecutionContext `json:"execution_context"`
+	Status           string                 `json:"status"`
+	CurrentStep      interface{}            `json:"current_step"`
+	ExecutionContext ExecutionContext       `json:"execution_context"`
 }
 
 type Event struct {
-	EventType string                 `json:"eventType" yaml:"eventType"`
-	Timestamp time.Time              `json:"timestamp" yaml:"timestamp"`
-	Step      map[string]string      `json:"step,omitempty" yaml:"step,omitempty"`
-	EdgeLabel string                 `json:"edgeLabel,omitempty" yaml:"edgeLabel,omitempty"`
-	Payload   map[string]interface{} `json:"payload,omitempty" yaml:"payload,omitempty"`
+	ID          interface{}            `json:"id,omitempty"`
+	EventType   string                 `json:"event_type"`
+	Direction   string                 `json:"direction,omitempty"`
+	EdgeLabel   string                 `json:"edge_label,omitempty"`
+	CreatedAt   time.Time              `json:"created_at"`
+	Step        map[string]interface{} `json:"step,omitempty"`
+	Payload     map[string]interface{} `json:"payload,omitempty"`
 }
 
 type Trigger struct {

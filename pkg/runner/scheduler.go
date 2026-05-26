@@ -11,15 +11,28 @@ import (
 )
 
 type Scheduler struct {
-	engine *Engine
-	cfg    *config.KfsConfig
+	engine      *Engine
+	cfg         *config.KfsConfig
+	Interactive bool
+	Progress    func(format string, args ...interface{})
 }
 
 func NewScheduler(client *kapso.Client, cfg *config.KfsConfig) *Scheduler {
+	e := NewEngine(client, cfg)
 	return &Scheduler{
-		engine: NewEngine(client, cfg),
+		engine: e,
 		cfg:    cfg,
 	}
+}
+
+func (s *Scheduler) SetInteractive(v bool) {
+	s.Interactive = v
+	s.engine.Interactive = v
+}
+
+func (s *Scheduler) SetProgress(f func(format string, args ...interface{})) {
+	s.Progress = f
+	s.engine.Progress = f
 }
 
 func (s *Scheduler) RunAll(ctx context.Context, specs []*spec.Spec) []*Result {
