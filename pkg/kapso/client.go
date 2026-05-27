@@ -148,12 +148,9 @@ func (c *Client) GetExecution(ctx context.Context, workflowID, executionID strin
 	return &out.Data, nil
 }
 
-func (c *Client) ResumeExecution(ctx context.Context, workflowID, executionID, data string) error {
+func (c *Client) ResumeExecution(ctx context.Context, workflowID, executionID string, msg MessagePayload) error {
 	body := map[string]interface{}{
-		"message": map[string]interface{}{
-			"kind": "payload",
-			"data": data,
-		},
+		"message": msg,
 	}
 	return c.do(ctx, "POST", fmt.Sprintf("/workflow_executions/%s/resume", executionID), body, nil)
 }

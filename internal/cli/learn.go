@@ -125,9 +125,11 @@ func learnRun(cfg *config.KfsConfig, root string) error {
 	fmt.Println("  ╚══════════════════════════════════════╝")
 	fmt.Println()
 
+	var prevStep interface{}
+
 	for {
 		status, err := runner.PollUntil(ctx, client, workflowID, execResp.ExecutionID,
-			time.Duration(timeout)*time.Second, "waiting", "ended", "failed")
+			time.Duration(timeout)*time.Second, prevStep, "waiting", "ended", "failed")
 		if err != nil {
 			return fmt.Errorf("error esperando al workflow: %v", err)
 		}
@@ -139,6 +141,8 @@ func learnRun(cfg *config.KfsConfig, root string) error {
 
 		stepName := formatCurrentStep(status.CurrentStep)
 		fmt.Printf("  ─── Workflow espera en: %s ───\n", stepName)
+
+		showAvailableOptions(status)
 
 		fmt.Print("  Tú > ")
 		if !promptReader.Scan() {
@@ -154,7 +158,10 @@ func learnRun(cfg *config.KfsConfig, root string) error {
 		messages = append(messages, input)
 		fmt.Println()
 
-		if err := client.ResumeExecution(ctx, workflowID, execResp.ExecutionID, input); err != nil {
+		prevStep = status.CurrentStep
+
+		payload := kapso.TextMessage(input)
+		if err := client.ResumeExecution(ctx, workflowID, execResp.ExecutionID, payload); err != nil {
 			return fmt.Errorf("error enviando mensaje: %v", err)
 		}
 	}
@@ -258,6 +265,82 @@ func learnRun(cfg *config.KfsConfig, root string) error {
 	fmt.Println("  Para ejecutarlo:")
 	fmt.Printf("    kfs run --spec %s\n", filePath)
 
+	return nil
+}
+
+func showAvailableOptions(status *kapso.ExecutionStatus) {
+	buttons := extractButtons(status.CurrentStep)
+	if len(buttons) == 0 {
+		buttons = extractButtonsFromContext(status.ExecutionContext)
+	}
+	if len(buttons) > 0 {
+		fmt.Println("  Opciones disponibles:")
+		for i, b := range buttons {
+			fmt.Printf("    %d) %s\n", i+1, b)
+		}
+	}
+}
+
+func extractButtons(step interface{}) []string {
+	m, ok := step.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	raw, ok := m["buttons"]
+	if !ok {
+		return nil
+	}
+	list, ok := raw.([]interface{})
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, item := range list {
+		if btn, ok := item.(map[string]interface{}); ok {
+			if title, ok := btn["title"].(string); ok {
+				out = append(out, title)
+			}
+		}
+	}
+	return out
+}
+
+func extractButtonsFromContext(ctx kapso.ExecutionContext) []string {
+	// Check common places where buttons might appear:
+	// context.messages.last.buttons, metadata.options, etc.
+	for _, src := range []map[string]interface{}{ctx.Context, ctx.Metadata} {
+		if src == nil {
+			continue
+		}
+		if raw, ok := src["buttons"]; ok {
+			if list, ok := raw.([]interface{}); ok {
+				var out []string
+				for _, item := range list {
+					if btn, ok := item.(map[string]interface{}); ok {
+						if title, ok := btn["title"].(string); ok {
+							out = append(out, title)
+						}
+					}
+				}
+				if len(out) > 0 {
+					return out
+				}
+			}
+		}
+		if raw, ok := src["options"]; ok {
+			if list, ok := raw.([]interface{}); ok {
+				var out []string
+				for _, item := range list {
+					if s, ok := item.(string); ok {
+						out = append(out, s)
+					}
+				}
+				if len(out) > 0 {
+					return out
+				}
+			}
+		}
+	}
 	return nil
 }
 

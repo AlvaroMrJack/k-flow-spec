@@ -1,6 +1,8 @@
 package spec
 
-import "github.com/AlvaroMrJack/k-flow-spec/pkg/kapso"
+import (
+	"github.com/AlvaroMrJack/k-flow-spec/pkg/kapso"
+)
 
 type Spec struct {
 	Name     string `yaml:"name"`
@@ -17,8 +19,28 @@ type Given struct {
 	PhoneNumber string                 `yaml:"phone_number,omitempty"`
 }
 
+type ButtonMessage struct {
+	ID    string `yaml:"id"`
+	Title string `yaml:"title"`
+}
+
 type Message struct {
-	User string `yaml:"user"`
+	User   string         `yaml:"user,omitempty"`
+	Button *ButtonMessage `yaml:"button,omitempty"`
+}
+
+func (m Message) ToPayload() kapso.MessagePayload {
+	if m.Button != nil {
+		return kapso.ButtonMessage(m.Button.ID, m.Button.Title)
+	}
+	return kapso.TextMessage(m.User)
+}
+
+func (m Message) Display() string {
+	if m.Button != nil {
+		return "[button: " + m.Button.Title + "]"
+	}
+	return m.User
 }
 
 type When struct {

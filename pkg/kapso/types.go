@@ -66,3 +66,16 @@ type Trigger struct {
 	ID   string `json:"id"`
 	Type string `json:"type"`
 }
+
+type MessagePayload struct {
+	Kind string      `json:"kind"`
+	Data interface{} `json:"data"`
+}
+
+func TextMessage(text string) MessagePayload {
+	return MessagePayload{Kind: "payload", Data: text}
+}
+
+func ButtonMessage(buttonID, buttonTitle string) MessagePayload {
+	return MessagePayload{Kind: "button_reply", Data: map[string]string{"id": buttonID, "title": buttonTitle}}
+}

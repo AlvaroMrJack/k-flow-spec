@@ -105,7 +105,7 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 	for i, msg := range s.When.Messages {
 		e.logProgress("  ⏳ Esperando que el workflow esté listo para recibir mensaje %d/%d...", i+1, numMessages)
 		status, err := PollUntil(ctx, e.client, s.Workflow, execResp.ExecutionID,
-			time.Duration(timeout)*time.Second, "waiting", "ended", "failed")
+			time.Duration(timeout)*time.Second, nil, "waiting", "ended", "failed")
 		if err != nil {
 			result.Passed = false
 			result.Errors = append(result.Errors, RunError{
@@ -121,8 +121,9 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 			break
 		}
 
-		e.logProgress("  → Enviando mensaje %d/%d: %q", i+1, numMessages, msg.User)
-		if err := e.client.ResumeExecution(ctx, s.Workflow, execResp.ExecutionID, msg.User); err != nil {
+		payload := msg.ToPayload()
+		e.logProgress("  → Enviando mensaje %d/%d: %s", i+1, numMessages, msg.Display())
+		if err := e.client.ResumeExecution(ctx, s.Workflow, execResp.ExecutionID, payload); err != nil {
 			result.Passed = false
 			result.Errors = append(result.Errors, RunError{
 				Type:    "execution_error",
@@ -135,7 +136,7 @@ func (e *Engine) Run(ctx context.Context, s *spec.Spec) *Result {
 
 	e.logProgress("  ⏳ Esperando que la ejecución finalice...")
 	finalStatus, err := PollUntil(ctx, e.client, s.Workflow, execResp.ExecutionID,
-		time.Duration(timeout)*time.Second, "ended", "failed", "waiting", "handoff")
+		time.Duration(timeout)*time.Second, nil, "ended", "failed", "waiting", "handoff")
 	if err != nil {
 		result.Passed = false
 		result.Errors = append(result.Errors, RunError{
