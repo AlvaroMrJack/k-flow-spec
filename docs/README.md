@@ -1,6 +1,6 @@
 # k-flow-spec
 
-> Automated QA for WhatsApp workflows — Spec-driven, open-source, Go.
+> Automated QA for WhatsApp workflows on Kapso — Spec-driven, open-source, Go.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/AlvaroMrJack/k-flow-spec.svg)](https://pkg.go.dev/github.com/AlvaroMrJack/k-flow-spec)
 [![CI](https://github.com/AlvaroMrJack/k-flow-spec/actions/workflows/test.yml/badge.svg)](https://github.com/AlvaroMrJack/k-flow-spec/actions/workflows/test.yml)
@@ -26,6 +26,18 @@ Testing a WhatsApp workflow today means grabbing your phone, typing messages to 
 **Every deploy is a leap of faith.**
 
 `k-flow-spec` fixes this: a CLI that discovers workflows, broadcasts, and flows; auto-generates specs; runs them against the real API or a mock; captures webhooks in real time; and deploys with a single command.
+
+### The stack
+
+```
+k-flow-spec  ← Automated QA layer (you are here)
+    ↓
+Kapso        ← Workflow engine (workflows, AI, broadcasts, flows)
+    ↓
+Meta API     ← Official WhatsApp Business API
+```
+
+`k-flow-spec` is a QA layer on top of [Kapso](https://kapso.ai), which orchestrates WhatsApp conversations using Meta's official Business API. You write specs once and run them against your Kapso workflows — either against the real API or the embedded mock server.
 
 ---
 
