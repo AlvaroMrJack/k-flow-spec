@@ -120,33 +120,47 @@ PATCH /workflow_executions/{id} → {workflow_execution:{status:"ended"}}  # cle
 ## Spec Format
 
 ```yaml
-# kfs-specs/booking.yml
-name: "Booking - Happy Path"
-workflow: booking-flow
+# kfs-specs/order-pizza.yml
+name: "Order Pizza - Happy Path"
+workflow: pizza-bot
 
 given:
   variables:
-    customer_name: "Juan"
-    service: "corte clásico"
-  phone_number: "+56900000000"
+    city: "Buenos Aires"
+  phone_number: "+541100000000"
 
 when:
   messages:
-    - user: "I want to book a haircut"
-    - user: "Tomorrow at 3pm"
+    - user: "I want to order a pizza"
+    - user: "Mozzarella"
+    - user: "Large"
     - user: "Yes, confirm"
 
 then:
-  path: ["start", "menu", "booking", "confirm"]
+  path: ["start", "menu", "ask_pizza", "ask_size", "confirm", "done"]
   terminal_status: "ended"
   decisions:
-    classify: "booking"
+    intent: "order"
+    confirm: "yes"
   variables_set:
-    customer_name: "Juan"
+    pizza: "Mozzarella"
+    size: "Large"
   snapshot: true
 ```
 
 `kfs generate` creates these stubs automatically — you just edit the messages and expected paths.
+
+### Button messages
+
+Some workflows send interactive buttons. Use the `button` field to reply:
+
+```yaml
+messages:
+  - button:
+      id: "btn_confirm"
+      title: "Yes, confirm"
+  - user: "Av. Corrientes 1234"
+```
 
 ---
 
@@ -226,10 +240,10 @@ Runs the real workflow and asks you for each message one by one. When you're don
 kfs learn
 
 # Specify a workflow directly
-kfs learn --workflow f1704737-...
+kfs learn --workflow <workflow-id>
 
 # Example session:
-$ kfs learn --workflow f1704737-...
+$ kfs learn --workflow pizza-bot-123
   Connecting to Kapso API...
   ✓ Execution started
 
@@ -238,16 +252,18 @@ $ kfs learn --workflow f1704737-...
   ║  to finish, Ctrl+C to exit           ║
   ╚══════════════════════════════════════╝
 
-  ─── Workflow waiting at: wait_menu_choice ───
-  You > I want to book a haircut
-  ─── Workflow waiting at: wait_client_name ───
-  You > Juan Pérez
+  ─── Workflow waiting at: ask_pizza ───
+  You > Mozzarella
+  ─── Workflow waiting at: ask_size ───
+  You > Large
+  ─── Workflow waiting at: ask_address ───
+  You > Av. Corrientes 1234
   ...
   You > done
 
-  ✓ Spec saved: kfs-specs/corteya-bot-v3-learned.yaml
+  ✓ Spec saved: kfs-specs/pizza-bot-learned.yaml
     - 3 messages recorded
-    - 12 nodes in path
+    - 8 nodes in path
     - 2 decisions captured
 ```
 
@@ -336,7 +352,7 @@ Starts a temporary HTTP server, registers it as a webhook, captures events, and 
 
 ```bash
 # Webhook receiver + run spec
-kfs webhook --spec kfs-specs/booking.yml
+kfs webhook --spec kfs-specs/order-pizza.yml
 
 # Watch events in real time
 kfs webhook --verbose
@@ -406,6 +422,7 @@ kfs deploy --full
 | `kfs run --update-snapshots` | Updates existing snapshots |
 | `kfs run --interactive` | Step-by-step debug mode |
 | `kfs run --format <fmt>` | Report format: json, junit, tap, markdown |
+| `kfs list` / `kfs ls` / `kfs list spec` | Lists all specs with workflow name, messages, and snapshot status |
 | `kfs test` | generate + run in one command |
 | **Mock server** | |
 | `kfs mock` | Starts standalone mock server |
