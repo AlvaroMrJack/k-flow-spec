@@ -20,15 +20,23 @@ func Validate(s *spec.Spec, result *Result) []RunError {
 
 	if s.Then.TerminalStatus != "" && result.Snapshot != nil {
 		found := false
+		hasEnded := false
+		hasFailed := false
 		for _, ev := range result.Snapshot.Events {
-			if ev.EventType == "execution_ended" && s.Then.TerminalStatus == "ended" {
-				found = true
-				break
+			if ev.EventType == "execution_ended" {
+				hasEnded = true
 			}
-			if ev.EventType == "execution_failed" && s.Then.TerminalStatus == "failed" {
-				found = true
-				break
+			if ev.EventType == "execution_failed" {
+				hasFailed = true
 			}
+		}
+		switch s.Then.TerminalStatus {
+		case "ended":
+			found = hasEnded
+		case "failed":
+			found = hasFailed
+		case "waiting":
+			found = !hasEnded && !hasFailed
 		}
 		if !found {
 			errs = append(errs, RunError{
