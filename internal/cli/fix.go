@@ -64,5 +64,5 @@ func init() {
 	fixCmd.Flags().BoolVar(&fixApply, "apply", false, "Aplicar reparaciones automáticamente")
 	fixCmd.Flags().BoolVar(&fixInteractive, "interactive", false, "Modo interactivo: preguntar antes de cada cambio")
 	fixCmd.Flags().StringVar(&fixSpecFile, "spec", "", "Analizar solo un spec específico")
-	RootCmd.AddCommand(fixCmd)
+	specCmd.AddCommand(fixCmd)
 }

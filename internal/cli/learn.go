@@ -372,5 +372,5 @@ func statusForEvents(evts []kapso.Event) string {
 
 func init() {
 	learnCmd.Flags().StringVar(&learnWorkflow, "workflow", "", "ID del flujo a grabar")
-	RootCmd.AddCommand(learnCmd)
+	specCmd.AddCommand(learnCmd)
 }

@@ -14,7 +14,7 @@ import (
 )
 
 var runBroadcastCmd = &cobra.Command{
-	Use:   "run-broadcast",
+	Use:   "broadcast",
 	Short: "Testea campañas Broadcast API",
 	Long: `Valida campañas de Broadcast API completas: creación, destinatarios, envío y métricas.
 
@@ -111,5 +111,5 @@ func init() {
 	runBroadcastCmd.Flags().BoolVar(&broadcastMock, "mock", false, "Contra mock server")
 	runBroadcastCmd.Flags().BoolVar(&broadcastDryRun, "dry-run", false, "Solo validar recipients sin enviar")
 	runBroadcastCmd.Flags().StringVarP(&broadcastSpecFile, "spec", "s", "", "Archivo spec de broadcast")
-	RootCmd.AddCommand(runBroadcastCmd)
+	toolCmd.AddCommand(runBroadcastCmd)
 }

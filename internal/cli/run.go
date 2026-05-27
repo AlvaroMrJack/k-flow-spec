@@ -260,5 +260,5 @@ func init() {
 	runCmd.Flags().StringVar(&runFormat, "format", "", "Formato de reporte (json, junit, tap, markdown)")
 	runCmd.Flags().BoolVar(&runUpdateSnapshots, "update-snapshots", false, "Actualizar snapshots existentes")
 	runCmd.Flags().BoolVarP(&runInteractive, "interactive", "i", false, "Modo debug paso a paso")
-	RootCmd.AddCommand(runCmd)
+	specCmd.AddCommand(runCmd)
 }

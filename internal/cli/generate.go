@@ -174,5 +174,5 @@ func init() {
 	generateCmd.Flags().StringVar(&workflowID, "workflow", "", "ID del flujo específico a generar")
 	generateCmd.Flags().BoolVar(&saveFixtures, "save-fixtures", false, "Además de specs, guarda fixtures para modo mock")
 	generateCmd.Flags().BoolVarP(&interactiveGen, "interactive", "i", false, "Modo interactivo paso a paso")
-	RootCmd.AddCommand(generateCmd)
+	specCmd.AddCommand(generateCmd)
 }

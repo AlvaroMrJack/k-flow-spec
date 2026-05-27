@@ -8,10 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	runConfigure bool
-)
-
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Inicializa un proyecto k-flow-spec en el directorio actual",
@@ -47,23 +43,15 @@ KAPSO_API_KEY=tu-api-key-aqui
 
 		fmt.Println("✅ kfs.yaml creado exitosamente.")
 		fmt.Println("✅ .env.example creado — copia a .env y agrega tu KAPSO_API_KEY")
-
-		if runConfigure {
-			if err := configureCmd.RunE(cmd, args); err != nil {
-				return err
-			}
-		} else {
-			fmt.Println()
-			fmt.Println("Siguientes pasos:")
-			fmt.Println("  1. kfs configure   — Configura tu API key y preferencias")
-			fmt.Println("  2. kfs generate    — Genera specs desde tus flujos")
-			fmt.Println("  3. kfs run --mock  — Ejecuta pruebas en modo simulado")
-		}
+		fmt.Println()
+		fmt.Println("Siguientes pasos:")
+		fmt.Println("  1. Edita kfs.yaml o crea un .env con tu KAPSO_API_KEY")
+		fmt.Println("  2. kfs spec generate         — Genera specs desde tus flujos")
+		fmt.Println("  3. kfs spec run --mock        — Ejecuta pruebas en modo simulado")
 		return nil
 	},
 }
 
 func init() {
-	initCmd.Flags().BoolVar(&runConfigure, "configure", false, "Ejecutar el asistente de configuración después de init")
 	RootCmd.AddCommand(initCmd)
 }

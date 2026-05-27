@@ -16,17 +16,9 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use:     "list",
-	Aliases: []string{"ls"},
+	Use:     "ls",
+	Aliases: []string{"list"},
 	Short:   "Lista los specs disponibles",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return listSpecs()
-	},
-}
-
-var listSpecCmd = &cobra.Command{
-	Use:   "spec",
-	Short: "Lista los specs disponibles",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return listSpecs()
 	},
@@ -132,8 +124,8 @@ func listSpecs() error {
 	}
 
 	fmt.Println("Para ejecutar un spec:")
-	fmt.Println("  kfs run")
-	fmt.Println("  kfs run --spec <archivo>")
+	fmt.Println("  kfs spec run")
+	fmt.Println("  kfs spec run --spec <archivo>")
 
 	return nil
 }
@@ -154,6 +146,5 @@ func loadWorkflowNames(client *kapso.Client) map[string]string {
 }
 
 func init() {
-	listCmd.AddCommand(listSpecCmd)
-	RootCmd.AddCommand(listCmd)
+	specCmd.AddCommand(listCmd)
 }

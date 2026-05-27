@@ -95,5 +95,5 @@ func init() {
 	flowCmd.Flags().BoolVar(&flowMock, "mock", false, "Contra mock server")
 	flowCmd.Flags().BoolVar(&flowOpen, "open", false, "Abrir flow en browser para debug visual")
 	flowCmd.Flags().StringVarP(&flowSpecFile, "spec", "s", "", "Archivo spec de flow")
-	RootCmd.AddCommand(flowCmd)
+	toolCmd.AddCommand(flowCmd)
 }

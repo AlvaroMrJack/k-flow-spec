@@ -19,5 +19,5 @@ var mockCmd = &cobra.Command{
 
 func init() {
 	mockCmd.Flags().IntVarP(&port, "port", "p", 8080, "Puerto para el servidor mock")
-	RootCmd.AddCommand(mockCmd)
+	toolCmd.AddCommand(mockCmd)
 }

@@ -21,7 +21,23 @@ k-flow-spec/
 ├── go.mod / go.sum
 ├── cmd/kfs/              # Main binary entrypoint
 ├── internal/
-│   ├── cli/              # cobra commands (learn, run, generate, etc.)
+│   ├── cli/              # cobra commands
+│   │   ├── root.go       # RootCmd + Execute()
+│   │   ├── init.go       # kfs init
+│   │   ├── spec.go       # kfs spec (parent)
+│   │   ├── tool.go       # kfs tool (parent)
+│   │   ├── generate.go   # kfs spec generate
+│   │   ├── learn.go      # kfs spec learn
+│   │   ├── run.go        # kfs spec run
+│   │   ├── list.go       # kfs spec ls / kfs spec list
+│   │   ├── fix.go        # kfs spec fix
+│   │   ├── deploy.go     # kfs tool deploy
+│   │   ├── webhook.go    # kfs tool webhook
+│   │   ├── flow.go       # kfs tool flow
+│   │   ├── ui.go         # kfs tool ui
+│   │   ├── mcp.go        # kfs tool mcp
+│   │   ├── mock.go       # kfs tool mock
+│   │   └── run_broadcast.go  # kfs tool broadcast
 │   ├── config/           # kfs.yaml loading + .env support
 │   ├── discovery/        # Workspace root discovery
 │   ├── fix/              # Auto-repair broken specs
@@ -51,6 +67,28 @@ k-flow-spec/
 ├── docs/README.md        # Full user-facing docs
 ├── Dockerfile
 └── install.sh
+```
+
+## CLI Structure
+
+```
+kfs
+├── init                  # Create project
+├── spec                  # Spec lifecycle (core)
+│   ├── generate          # Create stub specs from API
+│   ├── learn             # Record spec interactively
+│   ├── run               # Execute specs (--mock for offline)
+│   ├── ls (list)         # List specs with status
+│   └── fix               # Auto-repair broken specs
+├── tool                  # Advanced tools
+│   ├── deploy            # Build → push → test pipeline
+│   ├── webhook           # Webhook receiver + validator
+│   ├── broadcast         # Broadcast API testing
+│   ├── flow              # WhatsApp Flow testing
+│   ├── ui                # Web dashboard
+│   ├── mcp               # MCP server for AI assistants
+│   └── mock              # Standalone mock server
+└── completion            # Shell completion (cobra built-in)
 ```
 
 ## Key Design Decisions
@@ -84,34 +122,34 @@ make lint         # go vet ./...
 
 ### Create a spec interactively
 ```bash
-kfs learn --workflow <workflow-id>
+kfs spec learn --workflow <workflow-id>
 ```
 Type user messages one by one. The tool records the path, decisions, and messages. Ends with `done` or `Ctrl+C`.
 
 ### Run a spec
 ```bash
-kfs run                          # all specs in kfs-specs/
-kfs run --spec kfs-specs/foo.yaml
-kfs run --mock                   # against embedded mock (no API key)
-kfs run --ci                     # JUnit XML output
+kfs spec run                          # all specs in kfs-specs/
+kfs spec run --spec kfs-specs/foo.yaml
+kfs spec run --mock                   # against embedded mock (no API key)
+kfs spec run --ci                     # JUnit XML output
 ```
 
 ### Generate stubs
 ```bash
-kfs generate                     # non-interactive, from API
-kfs generate -i                  # step-by-step wizard
+kfs spec generate                     # non-interactive, from API
+kfs spec generate -i                  # step-by-step wizard
 ```
 
 ### Fix broken specs
 ```bash
-kfs fix                          # analyze
-kfs fix --apply                  # auto-repair
+kfs spec fix                          # analyze
+kfs spec fix --apply                  # auto-repair
 ```
 
 ## Important Gotchas
 
 1. **AI routing is non-deterministic.** The same message can route differently on different runs (e.g., `router: reservar` vs `router: unirme`). Specs should use specific messages that the AI classifies consistently, or expect multiple possible paths.
-2. **Learn vs Run divergence.** The `kfs learn` command shows only "waiting" steps to the user, but the generated spec path includes all intermediate nodes (processing nodes between user inputs). This is correct behavior.
+2. **Learn vs Run divergence.** The `kfs spec learn` command shows only "waiting" steps to the user, but the generated spec path includes all intermediate nodes (processing nodes between user inputs). This is correct behavior.
 3. **Mock is simplified.** The mock server always ends after one message. It's for dev/testing without real API access. For real workflow testing, use the real API.
 4. **Environment variables.** API keys go in `kfs.yaml` as `${KAPSO_API_KEY}` or in a `.env` file next to `kfs.yaml`.
 
@@ -121,22 +159,25 @@ kfs fix --apply                  # auto-repair
 cd /path/to/project
 
 # 1. Install latest kfs
-cd /path/to/k-flow-spec && go install ./cmd/kfs && cd -
+cd /path/to/k-flow-spec && make install && cd -
 
-# 2. Run all specs
-kfs run
+# 2. List specs
+kfs spec ls
 
-# 3. Record a new spec
-kfs learn
+# 3. Run all specs
+kfs spec run
 
-# 4. Run a specific spec
-kfs run --spec kfs-specs/onboarding-profesional.yaml
+# 4. Record a new spec
+kfs spec learn
+
+# 5. Run a specific spec
+kfs spec run --spec kfs-specs/onboarding-profesional.yaml
 ```
 
 ## Modifying kfs
 
 1. **New API method** → `pkg/kapso/client.go` + `pkg/kapso/types.go`
-2. **New CLI command** → `internal/cli/<name>.go` + register in `RootCmd`
+2. **New CLI command** → file in `internal/cli/`, register in the appropriate parent (`specCmd` or `toolCmd` or `RootCmd`)
 3. **Polling logic** → `pkg/runner/poller.go`
 4. **Validation rules** → `pkg/runner/validator.go`
 5. **Spec format** → `pkg/spec/types.go`

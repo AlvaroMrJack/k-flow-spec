@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/insta
 go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
 
 # Option 3 — Docker
-docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs run --mock
+docker run ghcr.io/AlvaroMrJack/k-flow-spec:latest kfs spec run --mock
 ```
 
 ---
@@ -47,13 +47,12 @@ Meta API     ← Official WhatsApp Business API
 # 1. Try it instantly (no API key, no connection needed)
 cd your-project/
 kfs init
-kfs run --mock
+kfs spec run --mock
 
-# 2. Connect to the real API (interactive)
-kfs init --configure             # Create project + step-by-step wizard
-kfs generate -i                  # Generate specs interactively
-kfs learn                        # Or record specs by running the flow live
-kfs run                          # Run against the real API
+# 2. Connect to the real API
+kfs spec generate                # Generate specs from your Kapso workflows
+kfs spec learn                   # Or record specs by running the flow live
+kfs spec run                     # Run against the real API
 ```
 
 Output:
@@ -85,19 +84,13 @@ curl -fsSL https://raw.githubusercontent.com/AlvaroMrJack/k-flow-spec/main/insta
 
 ## How It Works
 
-1. **`kfs init`** — Creates `kfs.yaml` with base config
-2. **`kfs configure`** — Interactive wizard: API key, phone, mode (mock/real), timeouts, rate limits, notifications, deploy
-3. **`kfs mock`** — Starts an HTTP server that simulates the WhatsApp API (for offline development)
-4. **`kfs generate`** or **`kfs generate -i`** — Discovers workflows via API (or fixtures), generates YAML specs. Interactive mode asks mock/real, Flows, workflow selection
-5. **`kfs run`** — Runs specs against the real API (`kfs run`) or the mock (`kfs run --mock`)
-6. **`kfs learn`** — Records a spec by running the live workflow step by step from the terminal
-7. **`kfs fix`** — Analyzes broken specs and repairs them automatically
-8. **`kfs ui`** — Local web dashboard with history, trends, and snapshot diffs
-9. **`kfs test`** — `generate` + `run` in a single command
-10. **`kfs run-broadcast`** — Tests Broadcast API campaigns
-11. **`kfs flow`** — Simulates WhatsApp Flow navigation
-12. **`kfs webhook`** — Webhook receiver + real-time validator
-13. **`kfs deploy`** — Build + push + test pipeline
+1. **`kfs init`** — Creates `kfs.yaml` with base config and `.env.example`
+2. **`kfs spec generate`** — Discovers workflows via API, generates YAML specs. Use `-i` for interactive wizard
+3. **`kfs spec learn`** — Records a spec by running the live workflow step by step from the terminal
+4. **`kfs spec run`** — Runs specs against the real API. Use `--mock` for offline development
+5. **`kfs spec ls`** — Lists all specs with name, messages, path length, and snapshot status
+6. **`kfs spec fix`** — Analyzes broken specs and repairs them automatically
+7. **`kfs tool ...`** — Advanced tools: `deploy`, `webhook`, `broadcast`, `flow`, `ui`, `mcp`, `mock`
 
 ### Testing cycle
 
@@ -148,7 +141,7 @@ then:
   snapshot: true
 ```
 
-`kfs generate` creates these stubs automatically — you just edit the messages and expected paths.
+`kfs spec generate` creates these stubs automatically — you just edit the messages and expected paths.
 
 ### Button messages
 
@@ -174,8 +167,8 @@ messages:
 | TAP | Test Anything Protocol |
 
 ```bash
-kfs run --ci        # JUnit XML in kfs-reports/
-kfs run --format json  # JSON output
+kfs spec run --ci        # JUnit XML in kfs-reports/
+kfs spec run --format json  # JSON output
 ```
 
 ---
@@ -185,7 +178,7 @@ kfs run --format json  # JSON output
 Each spec captures the full `execution_context` as a snapshot. On subsequent runs, it compares against the baseline and reports differences. Ideal for catching invisible regressions (variable changes, AI responses, unexpected paths).
 
 ```bash
-kfs run --update-snapshots  # Update all snapshots
+kfs spec run --update-snapshots  # Update all snapshots
 ```
 
 ---
@@ -208,42 +201,42 @@ jobs:
         with:
           go-version: "1.26"
       - run: go install github.com/AlvaroMrJack/k-flow-spec/cmd/kfs@latest
-      - run: kfs test --ci
+      - run: kfs spec run --ci
         env:
           KAPSO_API_KEY: ${{ secrets.KAPSO_API_KEY }}
 ```
 
 ---
 
-## `kfs run --mock` — No API key, no connection needed
+## `kfs spec run --mock` — No API key, no connection needed
 
 The embedded mock server simulates the entire WhatsApp API. Perfect for onboarding, development, and CI when you don't want to depend on upstream.
 
 ```bash
 # Start mock + run specs, all in one
-kfs run --mock
+kfs spec run --mock
 
 # Start mock server standalone
-kfs mock
+kfs tool mock
 ```
 
-It ships with a pre-loaded example workflow, so `kfs run --mock` works from the first `go install`, with zero configuration.
+It ships with a pre-loaded example workflow, so `kfs spec run --mock` works from the first `go install`, with zero configuration.
 
 ---
 
-## `kfs learn` — Interactive spec recording
+## `kfs spec learn` — Interactive spec recording
 
 Runs the real workflow and asks you for each message one by one. When you're done, it generates the spec with the actual path, AI decisions, and your replies.
 
 ```bash
 # Pick a workflow from the list
-kfs learn
+kfs spec learn
 
 # Specify a workflow directly
-kfs learn --workflow <workflow-id>
+kfs spec learn --workflow <workflow-id>
 
 # Example session:
-$ kfs learn --workflow pizza-bot-123
+$ kfs spec learn --workflow pizza-bot-123
   Connecting to Kapso API...
   ✓ Execution started
 
@@ -267,23 +260,23 @@ $ kfs learn --workflow pizza-bot-123
     - 2 decisions captured
 ```
 
-Unlike `kfs generate` (which creates a static spec with placeholders), `kfs learn` runs the real flow and captures exactly what happened: the path the AI took, the decisions at each router, and the messages you typed.
+Unlike `kfs spec generate` (which creates a static spec with placeholders), `kfs spec learn` runs the real flow and captures exactly what happened: the path the AI took, the decisions at each router, and the messages you typed.
 
 ---
 
-## `kfs fix` — Auto-repair
+## `kfs spec fix` — Auto-repair
 
 Detects and repairs broken specs automatically.
 
 ```bash
 # Analyze specs
-kfs fix
+kfs spec fix
 
 # Apply repairs
-kfs fix --apply
+kfs spec fix --apply
 
 # Interactive mode
-kfs fix --interactive
+kfs spec fix --interactive
 ```
 
 | Problem | Repair |
@@ -291,7 +284,7 @@ kfs fix --interactive
 | Node renamed | Updates path + decisions |
 | Branch removed | Removes stale decisions |
 | Variable changed | Renames in given.variables |
-| Outdated snapshot | kfs run --update-snapshots |
+| Outdated snapshot | kfs spec run --update-snapshots |
 
 ---
 
@@ -299,97 +292,97 @@ kfs fix --interactive
 
 ```bash
 # Start dashboard
-kfs ui
+kfs tool ui
 
 # Dashboard + integrated mock
-kfs ui --mock
+kfs tool ui --mock
 
 # Export static HTML
-kfs ui --export ./dashboard/
+kfs tool ui --export ./dashboard/
 ```
 
 Shows execution history, 7-day trends, visual snapshot diffs, and lets you run specs from the browser.
 
 ---
 
-## `kfs run-broadcast` — Broadcast testing
+## `kfs tool broadcast` — Broadcast testing
 
 Validates Broadcast API campaigns: creation, recipients, sending, and metrics.
 
 ```bash
 # Launch a test broadcast
-kfs run-broadcast --spec kfs-specs/promo-july.yml
+kfs tool broadcast --spec kfs-specs/promo-july.yml
 
 # Against mock (no real sends)
-kfs run-broadcast --mock
+kfs tool broadcast --mock
 
 # Validate recipients only, no send
-kfs run-broadcast --dry-run
+kfs tool broadcast --dry-run
 ```
 
 ---
 
-## `kfs flow` — WhatsApp Flow testing
+## `kfs tool flow` — WhatsApp Flow testing
 
 Simulates user navigation inside a Flow (native WhatsApp form).
 
 ```bash
 # Run a flow spec
-kfs flow --spec kfs-specs/checkout-flow.yml
+kfs tool flow --spec kfs-specs/checkout-flow.yml
 
 # With mock
-kfs flow --mock
+kfs tool flow --mock
 
 # Open flow in browser for visual debugging
-kfs flow --open
+kfs tool flow --open
 ```
 
 ---
 
-## `kfs webhook` — Webhook Receiver
+## `kfs tool webhook` — Webhook Receiver
 
 Starts a temporary HTTP server, registers it as a webhook, captures events, and validates them against the spec.
 
 ```bash
 # Webhook receiver + run spec
-kfs webhook --spec kfs-specs/order-pizza.yml
+kfs tool webhook --spec kfs-specs/order-pizza.yml
 
 # Watch events in real time
-kfs webhook --verbose
+kfs tool webhook --verbose
 
 # With automatic ngrok tunnel
-kfs webhook --tunnel
+kfs tool webhook --tunnel
 ```
 
 ---
 
-## `kfs deploy` — Deploy + Test Pipeline
+## `kfs tool deploy` — Deploy + Test Pipeline
 
 Single command: build → push → test.
 
 ```bash
 # Build + push + test
-kfs deploy
+kfs tool deploy
 
 # Build + test only (no push)
-kfs deploy --dry-run
+kfs tool deploy --dry-run
 
 # Full deploy + broadcast + webhook
-kfs deploy --full
+kfs tool deploy --full
 ```
 
 ---
 
-## MCP Server
+## `kfs tool mcp` — MCP Server
 
-`kfs` also works as an MCP server for AI assistants:
+`kfs` works as an MCP server for AI assistants:
 
 ```json
 {
   "mcpServers": {
     "k-flow-spec": {
       "command": "kfs",
-      "args": ["mcp"],
+      "args": ["tool", "mcp"],
       "env": { "KAPSO_API_KEY": "..." }
     }
   }
@@ -400,53 +393,43 @@ kfs deploy --full
 
 ## Commands
 
+### Core
+
 | Command | Description |
 |---------|-------------|
-| **Onboarding** | |
-| `kfs init` | Creates base `kfs.yaml` |
-| `kfs init --configure` | Creates `kfs.yaml` + launches config wizard |
-| `kfs configure` | Interactive wizard: API key, phone, mode, timeouts, rate limits, notifications, deploy |
-| **Spec generation** | |
-| `kfs generate` | Discovers workflows and generates specs (non-interactive) |
-| `kfs generate -i` | Step-by-step generation: mock/real, Flows, workflow selection |
-| `kfs generate --save-fixtures` | Generates specs + fixtures for mock mode |
-| `kfs generate --workflow <id>` | Generates spec for a specific workflow |
-| `kfs learn` | Records a spec by running the live workflow from the terminal |
-| `kfs learn --workflow <id>` | Records a specific workflow without picking from a list |
-| **Execution** | |
-| `kfs run` | Runs all specs against the real API |
-| `kfs run --mock` | Runs against the embedded mock server (no API key) |
-| `kfs run --spec <file>` | Runs a specific spec |
-| `kfs run --watch` | Watch mode: re-runs when files change |
-| `kfs run --ci` | CI mode: JUnit XML + strict exit codes |
-| `kfs run --update-snapshots` | Updates existing snapshots |
-| `kfs run --interactive` | Step-by-step debug mode |
-| `kfs run --format <fmt>` | Report format: json, junit, tap, markdown |
-| `kfs list` / `kfs ls` / `kfs list spec` | Lists all specs with workflow name, messages, and snapshot status |
-| `kfs test` | generate + run in one command |
-| **Mock server** | |
-| `kfs mock` | Starts standalone mock server |
-| **Maintenance** | |
-| `kfs fix` | Analyzes and repairs broken specs |
-| `kfs fix --apply` | Applies repairs automatically |
-| **Advanced testing** | |
-| `kfs run-broadcast` | Tests Broadcast API campaigns |
-| `kfs run-broadcast --mock` | Broadcast against mock |
-| `kfs flow` | Simulates WhatsApp Flow navigation |
-| `kfs flow --mock` | Flows against mock |
-| `kfs flow --open` | Opens flow in browser |
-| `kfs webhook` | Webhook receiver + real-time validator |
-| `kfs webhook --tunnel` | Webhook with automatic ngrok |
-| **Deploy** | |
-| `kfs deploy` | Build + push + test pipeline |
-| `kfs deploy --dry-run` | Build + test without push |
-| `kfs deploy --full` | Deploy + broadcast + webhook |
-| **Dashboard** | |
-| `kfs ui` | Local web dashboard |
-| `kfs ui --mock` | Dashboard + integrated mock |
-| **Integration** | |
-| `kfs mcp` | Starts MCP server for AI assistants |
-| `kfs completions` | Generates shell completions |
+| `kfs init` | Creates `kfs.yaml` and `.env.example` |
+| `kfs spec generate` | Discovers workflows and generates YAML specs |
+| `kfs spec generate -i` | Step-by-step generation wizard |
+| `kfs spec generate --workflow <id>` | Generate spec for a specific workflow |
+| `kfs spec learn` | Records a spec by running the live workflow from the terminal |
+| `kfs spec learn --workflow <id>` | Records a specific workflow directly |
+| `kfs spec run` | Runs all specs against the real API |
+| `kfs spec run --mock` | Runs against the embedded mock server (no API key needed) |
+| `kfs spec run --spec <file>` | Runs a specific spec |
+| `kfs spec run --watch` | Re-runs when spec files change |
+| `kfs spec run --ci` | JUnit XML output + strict exit codes |
+| `kfs spec run --update-snapshots` | Updates existing snapshots |
+| `kfs spec run --format <fmt>` | Report format: json, junit, tap, markdown |
+| `kfs spec ls` | Lists all specs with workflow name, messages, path, and snapshot status |
+| `kfs spec fix` | Analyzes and repairs broken specs |
+| `kfs spec fix --apply` | Applies repairs automatically |
+
+### Advanced tools
+
+| Command | Description |
+|---------|-------------|
+| `kfs tool deploy` | Build + push + test pipeline |
+| `kfs tool deploy --dry-run` | Build + test without push |
+| `kfs tool webhook` | Webhook receiver + real-time validator |
+| `kfs tool webhook --tunnel` | Auto-tunnel with ngrok |
+| `kfs tool broadcast` | Tests Broadcast API campaigns |
+| `kfs tool broadcast --mock` | Broadcast against mock |
+| `kfs tool flow` | Simulates WhatsApp Flow navigation |
+| `kfs tool flow --mock` | Flows against mock |
+| `kfs tool ui` | Local web dashboard |
+| `kfs tool ui --mock` | Dashboard + integrated mock |
+| `kfs tool mcp` | MCP server for AI assistants |
+| `kfs tool mock` | Standalone mock server |
 
 ---
 
@@ -514,11 +497,11 @@ deploy:
 
 | Phase | Time | Deliverable |
 |-------|------|-------------|
-| 1 | Day 1 | `kfs init` + `kfs mock` + `kfs generate` with/without API key |
-| 2 | Day 2 | `kfs run` (real + --mock) + polling + validation + `kfs fix` |
-| 3 | Day 3 | `kfs test` + CI + snapshot + reports + `kfs ui` |
-| 4 | Day 4 | MCP server + `kfs webhook` + `kfs flow` + parallel runner |
-| 5 | Day 5 | `kfs run-broadcast` + `kfs deploy` + Docker + docs |
+| 1 | Day 1 | `kfs init` + `kfs spec generate` with/without API key |
+| 2 | Day 2 | `kfs spec run` (real + --mock) + polling + validation + `kfs spec fix` |
+| 3 | Day 3 | CI + snapshot + reports + `kfs tool ui` |
+| 4 | Day 4 | MCP server + `kfs tool webhook` + `kfs tool flow` + parallel runner |
+| 5 | Day 5 | `kfs tool broadcast` + `kfs tool deploy` + Docker + docs |
 
 ---
 

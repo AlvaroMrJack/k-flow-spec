@@ -56,5 +56,5 @@ Uso en opencode.json o claude_desktop_config.json:
 }
 
 func init() {
-	RootCmd.AddCommand(mcpCmd)
+	toolCmd.AddCommand(mcpCmd)
 }
