@@ -148,12 +148,12 @@ kfs spec fix --apply                  # auto-repair
 
 ## Important Gotchas
 
-1. **AI routing is non-deterministic.** The same message can route differently on different runs (e.g., `router: reservar` vs `router: unirme`). Specs should use specific messages that the AI classifies consistently, or expect multiple possible paths.
+1. **AI routing is non-deterministic.** The same message can route differently on different runs (e.g., `intent: order` vs `intent: support`). Specs should use specific messages that the AI classifies consistently, or expect multiple possible paths.
 2. **Learn vs Run divergence.** The `kfs spec learn` command shows only "waiting" steps to the user, but the generated spec path includes all intermediate nodes (processing nodes between user inputs). This is correct behavior.
 3. **Mock is simplified.** The mock server always ends after one message. It's for dev/testing without real API access. For real workflow testing, use the real API.
 4. **Environment variables.** API keys go in `kfs.yaml` as `${KAPSO_API_KEY}` or in a `.env` file next to `kfs.yaml`.
 
-## Testing a Project (e.g., corteya)
+## Testing a Project
 
 ```bash
 cd /path/to/project
@@ -171,7 +171,7 @@ kfs spec run
 kfs spec learn
 
 # 5. Run a specific spec
-kfs spec run --spec kfs-specs/onboarding-profesional.yaml
+kfs spec run --spec kfs-specs/order-pizza.yaml
 ```
 
 ## Modifying kfs

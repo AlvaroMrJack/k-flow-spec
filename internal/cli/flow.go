@@ -48,12 +48,12 @@ Valida navegación entre pantallas, datos enviados, y estado terminal.`,
 			FlowID: "test_flow_123",
 			Screens: []flow.FlowScreenStep{
 				{Screen: "WELCOME", Action: "next"},
-				{Screen: "SERVICES", Action: "select", Fields: map[string]interface{}{"service": "corte clásico"}},
+				{Screen: "PRODUCT", Action: "select", Fields: map[string]interface{}{"product": "Standard Plan"}},
 				{Screen: "CONFIRM", Action: "confirm"},
 			},
 			Then: flow.FlowThen{
 				TerminalScreen: "THANK_YOU",
-				SubmittedData:  map[string]interface{}{"service": "corte clásico"},
+				SubmittedData:  map[string]interface{}{"product": "Standard Plan"},
 			},
 		}
 

@@ -63,7 +63,7 @@ func (s *Server) loadDefaultFixture() {
 			{ID: "start", Data: map[string]interface{}{
 				"node_type": "start",
 				"config": map[string]interface{}{
-					"message": "Bienvenido al soporte de CorteYa",
+					"message": "Welcome to Acme Support",
 				},
 			}},
 			{ID: "intro", Data: map[string]interface{}{
@@ -111,8 +111,8 @@ func (s *Server) loadDefaultFixture() {
 	}
 
 	s.variables["support-router"] = []kapso.Variable{
-		{Name: "customer_name", SampleValue: "Juan"},
-		{Name: "service", SampleValue: "corte clásico"},
+		{Name: "customer_name", SampleValue: "Jane"},
+		{Name: "product", SampleValue: "Standard Plan"},
 	}
 
 	s.triggers["support-router"] = []kapso.Trigger{
